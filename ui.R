@@ -24,6 +24,7 @@ shinyUI(fluidPage(
     mainPanel(
       uiOutput('summary'),
       tableOutput('forecast'),
+      plotOutput("forecastplot"),
       plotOutput("arimaplot")
     )
   )

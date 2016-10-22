@@ -59,6 +59,16 @@ shinyServer(
       
       
     })
+    
+    output$forecastplot<-renderPlot({
+      inFile<- data()
+      req(inFile)
+      data1<-inFile[, input$params]
+      arima<-auto.arima(data1)
+      plot(forecast(arima))
+      
+      
+    })
 
     
     
