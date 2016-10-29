@@ -34,9 +34,10 @@ shinyUI(fluidPage(
         selectInput('params', 'Parameters:',
                            choices = NULL),
         tags$div(class="box", 
-                 textOutput("console")),
-        tags$div(class="box", 
-                 textOutput("warnings")))
+                 textOutput("console"))),
+      conditionalPanel( "output.warn",
+                       tags$div(class="box", 
+                                 verbatimTextOutput("warnings")))
       ),
     mainPanel(
       tableOutput('forecast'),

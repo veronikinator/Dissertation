@@ -78,6 +78,13 @@ shinyServer(
     outputOptions(output, 'fileUploaded', suspendWhenHidden=FALSE)
     
     
+    #_______________Warnings handler_________________
+    
+    output$warn <- reactive({
+      return(length(warning())>1)
+    })
+    
+    outputOptions(output, 'warn', suspendWhenHidden=FALSE)
     
     #___________Console output_____________
     
@@ -90,8 +97,7 @@ shinyServer(
     })
     
     output$warnings<- renderPrint({
-      req(warnings())
-      warnings()
+      warning()
     })
   })
 
