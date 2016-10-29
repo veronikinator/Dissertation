@@ -6,12 +6,23 @@ shinyServer(
   function(input, output, session) {
   
     #________________Getting all the uploaded data_______
+    
+    makeList<- function(data){
+      l<-list()
+      for ( i in 1:length(data)){
+        l[[toString(data[i])]]<-data[i]
+      }
+      return(l)
+    }
+    
     data<-reactive({
       inFile<- input$data
       req(inFile)
       table<-read.csv(inFile$datapath)
       vars<-names(table)
+      vars1<-makeList(vars)
       updateSelectInput(session, "params","Select Columns", choices = vars)
+      updateCheckboxGroupInput(session, inputId="inCheckbox", choices = vars)
       table
     })
     

@@ -29,9 +29,12 @@ shinyUI(fluidPage(
       selectInput(
         "model", "Choose model:", choices = c("Auto Arima", "Arimax", "ETS")
         ),
+      
       conditionalPanel(
         "output.fileUploaded",
         selectInput('params', 'Parameters:',
+                           choices = NULL),
+        checkboxGroupInput("inCheckbox", "Choose columns", 
                            choices = NULL),
         tags$div(class="box", 
                  textOutput("console"))),
