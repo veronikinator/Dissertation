@@ -4,8 +4,7 @@
 shinyServer(
   
   function(input, output, session) {
-    
-    
+  
     #________________Getting all the uploaded data_______
     data<-reactive({
       inFile<- input$data
@@ -38,16 +37,13 @@ shinyServer(
       data1<-inFile[, input$params]
       auto.arima(data1)
     })
-    output$summary<-renderPrint({
-      inFile<- data()
-      req(inFile)
-      arima()
-    })
     
     output$forecast<- renderTable({
       inFile<- data()
       req(inFile)
-      data.frame(forecast(arima()))
+      table<-data.frame(forecast(arima()))
+      colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95")
+      table
     })
     
     output$arimaplot<-renderPlot({
@@ -80,4 +76,23 @@ shinyServer(
     })
     
     outputOptions(output, 'fileUploaded', suspendWhenHidden=FALSE)
+    
+    
+    
+    #___________Console output_____________
+    
+    logText <- reactive({
+      capture.output(arima())
+    })
+    
+    output$console<- renderPrint({
+      logText()
+    })
+    
+    output$warnings<- renderPrint({
+      req(warnings())
+      warnings()
+    })
   })
+
+
