@@ -89,11 +89,14 @@ shinyServer(
     output$forecastplot<-renderPlot({
       inFile<- data()
       req(inFile)
-      fitted<- switch(input$model,
-                      "Auto Arima"= {
-                        arima()
-                      })
-      plot(forecast(fitted))
+      fit<- switch(input$model, 
+                   "Auto Arima"={
+                     arima()
+                   },
+                   "State"={
+                     state()
+                   })
+      plot(forecast(fit))
       
       
     })

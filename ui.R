@@ -49,10 +49,10 @@ shinyUI(fluidPage(
       ),
     mainPanel(
       tableOutput('forecast'),
+      plotOutput("forecastplot"),
       conditionalPanel("input.model=='State'",
                        textOutput("State")),
       conditionalPanel("input.model=='Auto Arima'",
-                       plotOutput("forecastplot"),
                        plotOutput("arimaplot"))
     )
   )
