@@ -2,9 +2,9 @@
 
 css<- "div.box {
       width: 250px;
-      border: 5px solid red;
-      padding: 5px;
-      margin: 5px;
+      border: 2px solid rgb(191, 0, 55);
+      padding: 2px;
+      margin: 2px;
     }"
 
 # Define UI for application that draws a histogram
@@ -48,12 +48,17 @@ shinyUI(fluidPage(
                                  verbatimTextOutput("warnings")))
       ),
     mainPanel(
-      tableOutput('forecast'),
-      plotOutput("forecastplot"),
-      conditionalPanel("input.model=='State'",
-                       textOutput("State")),
-      conditionalPanel("input.model=='Auto Arima'",
-                       plotOutput("arimaplot"))
+      tabsetPanel(
+      tabPanel("Forecast",
+               tags$h4("Forecast Table"),
+               tableOutput('forecast'),
+               plotOutput("forecastplot"),
+               conditionalPanel("input.model=='State'",
+                                textOutput("State")),
+               conditionalPanel("input.model=='Auto Arima'",
+                                plotOutput("arimaplot"))),
+      tabPanel("Data",
+               DT::dataTableOutput('contents')))
     )
   )
 ))
