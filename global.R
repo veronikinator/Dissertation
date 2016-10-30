@@ -1,6 +1,8 @@
 #install.packages("forecast")
 #install.packages("shiny")
 #install.packages('dplyr')
+#install.packages('DT')
+library(DT)
 library(dplyr)
 library(forecast)
 library(shiny)

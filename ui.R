@@ -26,16 +26,17 @@ shinyUI(fluidPage(
                 )
       ),
       tags$hr(),
-      selectInput(
-        "model", "Choose model:", choices = c("Auto Arima", "Arimax", "ETS")
-        ),
       
       conditionalPanel(
         "output.fileUploaded",
-        selectInput('params', 'Parameters:',
-                           choices = NULL),
-        checkboxGroupInput("inCheckbox", "Choose columns", 
-                           choices = NULL),
+        selectInput(
+          "model", "Choose model:", choices = c("Auto Arima", "Arimax", "ETS", "State")
+        ),
+        conditionalPanel("input.model=='Auto Arima'",
+                         selectInput('paramsAutoArima', 'Parameters:', choices = NULL)),
+        conditionalPanel("input.model=='Arimax'",
+                         checkboxGroupInput("params", "Choose columns", 
+                           choices = NULL)),
         tags$div(class="box", 
                  textOutput("console"))),
       conditionalPanel( "output.warn",
@@ -43,9 +44,12 @@ shinyUI(fluidPage(
                                  verbatimTextOutput("warnings")))
       ),
     mainPanel(
-      tableOutput('forecast'),
-      plotOutput("forecastplot"),
-      plotOutput("arimaplot")
+      conditionalPanel("input.model=='State'",
+                       textOutput("State")),
+      conditionalPanel("input.model=='Auto Arima'",
+                       tableOutput('forecast'),
+                       plotOutput("forecastplot"),
+                       plotOutput("arimaplot"))
     )
   )
 ))

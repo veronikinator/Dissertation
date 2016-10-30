@@ -21,8 +21,8 @@ shinyServer(
       table<-read.csv(inFile$datapath)
       vars<-names(table)
       vars1<-makeList(vars)
-      updateSelectInput(session, "params","Select Columns", choices = vars)
-      updateCheckboxGroupInput(session, inputId="inCheckbox", choices = vars)
+      updateSelectInput(session, "paramsAutoArima","Select Columns", choices = vars)
+      updateCheckboxGroupInput(session, inputId="params", choices = vars, selected=vars[1])
       table
     })
     
@@ -36,8 +36,8 @@ shinyServer(
     #________________Outputting the uploaded table___________
 
     
-    output$contents <- renderTable({  
-      data()
+    output$contents <- DT::renderDataTable({  
+      DT::datatable(data())
     })
     
    
@@ -45,7 +45,7 @@ shinyServer(
     
     arima<-reactive({
       inFile<- data()
-      data1<-inFile[, input$params]
+      data1<-inFile[, input$paramsAutoArima]
       auto.arima(data1)
     })
     
@@ -109,6 +109,10 @@ shinyServer(
     
     output$warnings<- renderPrint({
       warning()
+    })
+    
+    output$State<-renderPrint({
+      "state"
     })
   })
 
