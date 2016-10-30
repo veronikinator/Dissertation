@@ -21,8 +21,9 @@ shinyServer(
       table<-read.csv(inFile$datapath)
       vars<-names(table)
       vars1<-makeList(vars)
-      updateSelectInput(session, "paramsAutoArima","Select Columns", choices = vars)
-      updateCheckboxGroupInput(session, inputId="params", choices = vars, selected=vars[1])
+      updateSelectInput(session, "paramsAutoArima","Select Columns:", choices = vars)
+      updateSelectInput(session, "paramsState","Select Columns:", choices = vars)
+      updateCheckboxGroupInput(session, inputId="paramsArimax", choices = vars, selected=vars[1])
       table
     })
     
@@ -41,7 +42,7 @@ shinyServer(
     })
     
    
-    #_______________Outputing auto.arima summary_____
+    #_______________Fitting the models_____
     
     arima<-reactive({
       inFile<- data()
@@ -49,10 +50,28 @@ shinyServer(
       auto.arima(data1)
     })
     
+    state<-reactive({
+      inFile<- data()
+      data1<-inFile[, input$paramsState]
+      type<-input$StateType
+      StructTS(data1, type=type)
+      
+    })
+    
+    
+    #______Construction forecast output_________
+    
     output$forecast<- renderTable({
       inFile<- data()
       req(inFile)
-      table<-data.frame(forecast(arima()))
+      fit<- switch(input$model, 
+                      "Auto Arima"={
+                        arima()
+                      },
+                      "State"={
+                        state()
+                      })
+      table<-data.frame(forecast(fit))
       colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95")
       table
     })
@@ -70,9 +89,11 @@ shinyServer(
     output$forecastplot<-renderPlot({
       inFile<- data()
       req(inFile)
-      data1<-inFile[, input$params]
-      arima<-auto.arima(data1)
-      plot(forecast(arima))
+      fitted<- switch(input$model,
+                      "Auto Arima"= {
+                        arima()
+                      })
+      plot(forecast(fitted))
       
       
     })
