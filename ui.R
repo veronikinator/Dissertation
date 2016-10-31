@@ -7,6 +7,9 @@ css<- "div.box {
       margin: 2px;
     }"
 
+
+
+
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
   tags$head(
@@ -32,6 +35,7 @@ shinyUI(fluidPage(
         selectInput(
           "model", "Choose model:", choices = c("Auto Arima", "Arimax", "ETS", "State")
         ),
+        numericInput("period", "Choose a number of periods to forecast:", 10),
         conditionalPanel("input.model=='Auto Arima'",
                          selectInput('paramsAutoArima', 'Parameters:', choices = NULL)),
         conditionalPanel("input.model=='Arimax'",
@@ -41,8 +45,11 @@ shinyUI(fluidPage(
                          selectInput("paramsState", "Choose columns", 
                                             choices = NULL),
                          selectInput("StateType", "Choose type:", choices=c("level", "trend", "BSM"), selected="level")),
-        tags$div(class="box", 
-                 textOutput("console"))),
+        actionButton("analyse", label = "Analyse"),
+        conditionalPanel("input.analyse == 1",
+                         tags$br(),
+                         tags$div(class="box", 
+                 textOutput("console")))),
       conditionalPanel( "output.warn",
                        tags$div(class="box", 
                                  verbatimTextOutput("warnings")))

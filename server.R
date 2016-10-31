@@ -27,21 +27,15 @@ shinyServer(
       table
     })
     
-    parameters<- reactive ({
-      inFile<- input$data
-      req(inFile)
-      vars <- names(data())
-      vars
-    })
-    
     #________________Outputting the uploaded table___________
 
     
-    output$contents <- DT::renderDataTable({  
+    observeEvent(input$analyse, 
+                 {output$contents <- DT::renderDataTable({  
       DT::datatable(data())
-    })
+    })})
     
-   
+
     #_______________Fitting the models_____
     
     arima<-reactive({
@@ -58,35 +52,43 @@ shinyServer(
       
     })
     
+    marss<-reactive({
+      inFile<- data()
+      data1<-inFile[, input$paramsState]
+      MARSS(c(data1))
+    })
+    
     
     #______Construction forecast output_________
     
-    output$forecast<- renderTable({
-      inFile<- data()
-      req(inFile)
-      fit<- switch(input$model, 
-                      "Auto Arima"={
-                        arima()
-                      },
-                      "State"={
-                        state()
-                      })
-      table<-data.frame(forecast(fit))
-      colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95")
-      table
+    observeEvent(input$analyse, {
+      output$forecast<- renderTable({
+        inFile<- data()
+        req(inFile)
+      
+        table<-data.frame(forecast(fit(), h=input$period))
+        colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95")
+        table
+      })
+      output$arimaplot<-renderPlot({
+        inFile<- data()
+        req(inFile)
+        plot(arima())
+        
+      })
+      
+      output$forecastplot<-renderPlot({
+        inFile<- data()
+        req(inFile)
+        
+        f<-forecast(fit(), h=input$period)
+        plot(f)
+        
+      })
+      
     })
     
-    output$arimaplot<-renderPlot({
-      inFile<- data()
-      req(inFile)
-      data1<-inFile[, input$params]
-      arima<-auto.arima(data1)
-     plot(arima)
-      
-      
-    })
-    
-    output$forecastplot<-renderPlot({
+    fit<- reactive({
       inFile<- data()
       req(inFile)
       fit<- switch(input$model, 
@@ -94,13 +96,10 @@ shinyServer(
                      arima()
                    },
                    "State"={
-                     state()
+                     marss()
                    })
-      plot(forecast(fit))
-      
-      
+      fit
     })
-
     
     
     #_____________Creating conditional panel_________
@@ -127,16 +126,18 @@ shinyServer(
       capture.output(arima())
     })
     
-    output$console<- renderPrint({
-      logText()
-    })
+    observeEvent(input$analyse, {
+      output$console<- renderPrint({
+        logText()
+      })
     
-    output$warnings<- renderPrint({
-      warning()
-    })
+      output$warnings<- renderPrint({
+        warning()
+      })
     
-    output$State<-renderPrint({
-      "state"
+      output$State<-renderPrint({
+        "state"
+      })
     })
   })
 
