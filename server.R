@@ -62,13 +62,13 @@ shinyServer(
     #______Construction forecast output_________
     
     observeEvent(input$analyse, {
-      output$forecast<- renderTable({
+      output$forecast<- DT::renderDataTable({
         inFile<- data()
         req(inFile)
       
-        table<-data.frame(forecast(fit(), h=input$period))
+        table<- data.frame(forecast(fit(), h=input$period))
         colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95")
-        table
+        DT::datatable(table)
       })
       output$arimaplot<-renderPlot({
         inFile<- data()

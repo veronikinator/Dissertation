@@ -29,6 +29,7 @@ shinyUI(fluidPage(
                 )
       ),
       tags$hr(),
+      #matrixInput('foo', 'Foo', head()),
       
       conditionalPanel(
         "output.fileUploaded",
@@ -44,7 +45,14 @@ shinyUI(fluidPage(
         conditionalPanel("input.model=='State'",
                          selectInput("paramsState", "Choose columns", 
                                             choices = NULL),
-                         selectInput("StateType", "Choose type:", choices=c("level", "trend", "BSM"), selected="level")),
+                         selectInput("StateModel", "Choose model:", choices=c("Structural", "Autoregressive")),
+                         conditionalPanel("input.StateModel=='Structural'",
+                                          selectInput("StateType", "Choose type:", choices=c("level", "trend", "BSM"), selected="level")
+                                          ),
+                         tags$h4("BlahBlah")
+                         #conditionalPanel("input.StateModel=='Autoregressive'",
+                          #                
+                                          ),
         actionButton("analyse", label = "Analyse"),
         conditionalPanel("input.analyse == 1",
                          tags$br(),
@@ -58,7 +66,7 @@ shinyUI(fluidPage(
       tabsetPanel(
       tabPanel("Forecast",
                tags$h4("Forecast Table"),
-               tableOutput('forecast'),
+               DT::dataTableOutput('forecast'),
                plotOutput("forecastplot"),
                conditionalPanel("input.model=='State'",
                                 textOutput("State")),
