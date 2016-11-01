@@ -24,6 +24,7 @@ shinyServer(
       updateSelectInput(session, "paramsAutoArima","Select Columns:", choices = vars)
       updateSelectInput(session, "paramsState","Select Columns:", choices = vars)
       updateCheckboxGroupInput(session, inputId="paramsArimax", choices = vars, selected=vars[1])
+      updateCheckboxGroupInput(session, inputId="paramsMARSS", choices = vars, selected=vars[1])
       table
     })
     
@@ -52,12 +53,6 @@ shinyServer(
       
     })
     
-    marss<-reactive({
-      inFile<- data()
-      data1<-inFile[, input$paramsState]
-      MARSS(c(data1))
-    })
-    
     
     #______Construction forecast output_________
     
@@ -65,25 +60,35 @@ shinyServer(
       output$forecast<- DT::renderDataTable({
         inFile<- data()
         req(inFile)
-      
-        table<- data.frame(forecast(fit(), h=input$period))
-        colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95")
-        DT::datatable(table)
+        if (input$StateModel=='Autoregressive'){
+          NULL
+        } else{
+          table<- data.frame(forecast(fit(), h=input$period))
+          colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95")
+          DT::datatable(table)
+        }
       })
+      
+      
       output$arimaplot<-renderPlot({
         inFile<- data()
         req(inFile)
-        plot(arima())
-        
+        if (input$StateModel=='Autoregressive'){
+          NULL
+        } else{
+          plot(arima())
+        }
       })
       
       output$forecastplot<-renderPlot({
         inFile<- data()
         req(inFile)
-        
-        f<-forecast(fit(), h=input$period)
-        plot(f)
-        
+        if (input$StateModel=='Autoregressive'){
+          NULL
+        } else{
+          f<-forecast(fit(), h=input$period)
+         plot(f)
+        }
       })
       
     })
@@ -96,7 +101,7 @@ shinyServer(
                      arima()
                    },
                    "State"={
-                     marss()
+                     state()
                    })
       fit
     })
@@ -128,7 +133,12 @@ shinyServer(
     
     observeEvent(input$analyse, {
       output$console<- renderPrint({
-        logText()
+        if (input$StateModel=='Autoregressive'){
+          NULL
+        } else{
+          logText()
+        }
+        
       })
     
       output$warnings<- renderPrint({
@@ -139,6 +149,44 @@ shinyServer(
         "state"
       })
     })
+    
+    
+    
+    
+    #__________MARSS handler__________
+    
+    MARSSHandler<-reactive({
+      
+      inFile<- input$data
+      req(inFile)
+      table<-read.csv(inFile$datapath)
+      
+      dat<-table[, input$paramsState]
+      
+      dat<-sapply(dat, as.numeric)
+      dat<-as.matrix(dat)
+      dat<-t(dat)
+      dat
+    })
+    
+    marss<-reactive({
+      dat<-MARSSHandler()
+      mars<-MARSS(dat)
+      mars
+    })
+    
+    observeEvent(input$analyse,{
+      output$MARSS<-renderPrint({
+        dat<-MARSSHandler()
+        
+        
+        mars<-MARSS(dat)
+        capture.output(mars)
+        
+      })
+    })
+    
+    
   })
 
 
