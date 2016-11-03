@@ -31,10 +31,10 @@ shinyServer(
     #________________Outputting the uploaded table___________
 
     
-    observeEvent(input$analyse, 
-                 {output$contents <- DT::renderDataTable({  
+    output$contents <- DT::renderDataTable({  
       DT::datatable(data())
-    })})
+    })
+
     
 
     #_______________Fitting the models_____
@@ -56,39 +56,35 @@ shinyServer(
     
     #______Construction forecast output_________
     
-    observeEvent(input$analyse, {
+    observeEvent(input$analyseArima, {
       output$forecast<- DT::renderDataTable({
         inFile<- data()
         req(inFile)
-        if (input$StateModel=='Autoregressive'){
-          NULL
-        } else{
+        
+          #table<- data.frame(MARSSsimulate(marss(), tSteps=input$period)$sim.data)
+          #table<-t(table)
+       
           table<- data.frame(forecast(fit(), h=input$period))
           colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95")
           DT::datatable(table)
-        }
       })
       
       
       output$arimaplot<-renderPlot({
         inFile<- data()
         req(inFile)
-        if (input$StateModel=='Autoregressive'){
-          NULL
-        } else{
+
           plot(arima())
-        }
+        
       })
       
       output$forecastplot<-renderPlot({
         inFile<- data()
         req(inFile)
-        if (input$StateModel=='Autoregressive'){
-          NULL
-        } else{
+       
           f<-forecast(fit(), h=input$period)
          plot(f)
-        }
+        
       })
       
     })
@@ -175,13 +171,10 @@ shinyServer(
       mars
     })
     
-    observeEvent(input$analyse,{
+    observeEvent(input$analyseState,{
       output$MARSS<-renderPrint({
-        dat<-MARSSHandler()
-        
-        
-        mars<-MARSS(dat)
-        capture.output(mars)
+        mars<-marss()
+        summary(mars$par)
         
       })
     })
