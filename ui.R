@@ -36,11 +36,12 @@ shinyUI(
     tabPanel("Arima",
                sidebarPanel(
                  numericInput("period", "Choose a number of periods to forecast:", 10),
-                 selectInput( "model", "Choose model:", choices = c("Auto Arima", "Manual")
+                 selectInput( "arimaModel", "Choose model:", choices = c("Auto Arima", "Manual")
                               ),
-                 conditionalPanel("input.model=='Auto Arima'",
+                 conditionalPanel("input.arimaModel=='Auto Arima'",
                                   selectInput('paramsAutoArima', 'Parameters:', choices = NULL)),
-                 conditionalPanel("input.model=='Manual'",
+                 conditionalPanel("input.arimaModel=='Manual'",
+                                  textInput("arimaOrder", "Choose the order of the model:", "0,0,0"),
                                   checkboxGroupInput("paramsArimax", "Choose columns", choices = NULL)),
                  actionButton("analyseArima", label = "Analyse"),
                  conditionalPanel("input.analyseArima > 0",

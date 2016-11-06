@@ -35,14 +35,25 @@ shinyServer(
       DT::datatable(data())
     })
 
-    
 
     #_______________Fitting the models_____
     
-    arima<-reactive({
+    arimaFit<-reactive({
+      
       inFile<- data()
-      data1<-inFile[, input$paramsAutoArima]
-      auto.arima(data1)
+
+      if (input$arimaModel == "Manual"){
+        params<-input$paramsArimax
+        data1<-inFile[, params]
+        x<-input$arimaOrder
+        x <- as.numeric(c(unlist(strsplit(x, ","))))
+        model<- arima(data1, order = x)
+      } else {
+        data1<-inFile[, input$paramsAutoArima]
+        model<- auto.arima(data1)
+      }
+      
+      model
     })
     
     state<-reactive({
@@ -74,7 +85,7 @@ shinyServer(
         inFile<- data()
         req(inFile)
 
-          plot(arima())
+          plot(arimaFit())
         
       })
       
@@ -92,13 +103,7 @@ shinyServer(
     fit<- reactive({
       inFile<- data()
       req(inFile)
-      fit<- switch(input$model, 
-                   "Auto Arima"={
-                     arima()
-                   },
-                   "State"={
-                     state()
-                   })
+      fit<-arimaFit()            
       fit
     })
     
@@ -124,7 +129,7 @@ shinyServer(
     #___________Console output_____________
     
     logText <- reactive({
-      capture.output(arima())
+      capture.output(arimaFit())
     })
     
     observeEvent(input$analyse, {
