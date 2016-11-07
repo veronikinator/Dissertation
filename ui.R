@@ -11,7 +11,7 @@ margin: 2px;
 # Define UI for application that draws a histogram
 shinyUI(
 
-  navbarPage("Time Series Analysis App",
+  navbarPage("Time Series Analysis App", id = "tabs",
     
     tags$head(
       tags$style(type="text/css", css)
@@ -30,19 +30,21 @@ shinyUI(
                     )
         ),
       mainPanel(
-        DT::dataTableOutput('contents')
+        DT::dataTableOutput('contents'),
+        plotOutput("dataPlot")
       )
     ),
     tabPanel("Arima",
                sidebarPanel(
-                 numericInput("period", "Choose a number of periods to forecast:", 10),
+                 numericInput("arimaPeriod", "Choose a number of periods to forecast:", 10),
                  selectInput( "arimaModel", "Choose model:", choices = c("Auto Arima", "Manual")
                               ),
                  conditionalPanel("input.arimaModel=='Auto Arima'",
                                   selectInput('paramsAutoArima', 'Parameters:', choices = NULL)),
                  conditionalPanel("input.arimaModel=='Manual'",
                                   textInput("arimaOrder", "Choose the order of the model:", "0,0,0"),
-                                  checkboxGroupInput("paramsArimax", "Choose columns", choices = NULL)),
+                                  selectInput('paramsArima', 'Parameters:', choices = NULL),
+                                  checkboxGroupInput("xregParamsArimax", "Choose explanatory variables:", choices = NULL)),
                  actionButton("analyseArima", label = "Analyse"),
                  conditionalPanel("input.analyseArima > 0",
                                   tags$br(),
@@ -50,10 +52,10 @@ shinyUI(
                  ),
              mainPanel(
                tags$h4("Forecast Table"),
-               DT::dataTableOutput('forecast'),
-               plotOutput("forecastplot"),
-               conditionalPanel("input.model=='Auto Arima'",
-                         plotOutput("arimaplot"))
+               DT::dataTableOutput('arimaForecast'),
+               plotOutput("arimaForecastPlot"),
+               plotOutput("arimaPlot"),
+               textOutput("arimaPrint")
                )
       ),
     tabPanel("Space-State",
@@ -74,25 +76,3 @@ shinyUI(
                )
     )
 ))
-
-# 
-# shinyUI(
-#   navbarPage("Page Title",
-#              
-#              tabPanel("Panel 1",
-#                       sidebarPanel(
-#                                   fileInput('data', 'Choose file to upload', accept = c('text/csv',
-#                                                                                       'text/comma-separated-values',
-#                                                                                       'text/tab-separated-values',
-#                                                                                       'text/plain',
-#                                                                                       '.csv',
-#                                                                                       '.tsv')
-#                                             )
-#                                 )     
-#                       
-#                       
-#                       ),
-#              tabPanel("Panel 2"),
-#              tabPanel("Panel 3")
-#   )
-# )

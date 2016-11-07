@@ -23,7 +23,8 @@ shinyServer(
       vars1<-makeList(vars)
       updateSelectInput(session, "paramsAutoArima","Select Columns:", choices = vars)
       updateSelectInput(session, "paramsState","Select Columns:", choices = vars)
-      updateCheckboxGroupInput(session, inputId="paramsArimax", choices = vars, selected=vars[1])
+      updateSelectInput(session, "paramsArima", "Select data:", choices = vars)
+      updateCheckboxGroupInput(session, inputId="xregParamsArimax", choices = vars, selected=NULL)
       updateCheckboxGroupInput(session, inputId="paramsMARSS", choices = vars, selected=vars[1])
       table
     })
@@ -38,22 +39,48 @@ shinyServer(
 
     #_______________Fitting the models_____
     
+    
+    xreg<- reactive({
+      input$xregParamsArimax
+    })
+    
+    output$arimaPrint<- renderPrint({
+      xreg()
+    })
+    
     arimaFit<-reactive({
       
       inFile<- data()
-
+      
       if (input$arimaModel == "Manual"){
-        params<-input$paramsArimax
+        
+        params<-input$paramsArima
         data1<-inFile[, params]
         x<-input$arimaOrder
-        x <- as.numeric(c(unlist(strsplit(x, ","))))
-        model<- arima(data1, order = x)
+        x<-as.numeric(unlist(strsplit(x, ",")))
+        if (is.null(xreg())){
+          model<-Arima(data1, order = x)
+        } else {
+          model<- Arima(data1, order = x, xreg = inFile[, xreg()])
+        }
+        
       } else {
+        
         data1<-inFile[, input$paramsAutoArima]
         model<- auto.arima(data1)
       }
       
       model
+    })
+    
+    arimaForecast<- reactive({
+      if (is.null(xreg())){
+        
+        f<- forecast(arimaFit(), h=input$arimaPeriod)
+      } else{
+        f<-forecast(arimaFit(), h=input$arimaPeriod, xreg=data()[,xreg()])
+      }
+      
     })
     
     state<-reactive({
@@ -68,54 +95,47 @@ shinyServer(
     #______Construction forecast output_________
     
     observeEvent(input$analyseArima, {
-      output$forecast<- DT::renderDataTable({
-        inFile<- data()
-        req(inFile)
+      output$arimaForecast<- DT::renderDataTable({
         
           #table<- data.frame(MARSSsimulate(marss(), tSteps=input$period)$sim.data)
           #table<-t(table)
        
-          table<- data.frame(forecast(fit(), h=input$period))
+          table<- data.frame(arimaForecast())
           colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95")
           DT::datatable(table)
       })
       
       
-      output$arimaplot<-renderPlot({
-        inFile<- data()
-        req(inFile)
-
-          plot(arimaFit())
+      output$arimaPlot<-renderPlot({
+        
+        plot(arimaFit()$x)
         
       })
       
-      output$forecastplot<-renderPlot({
-        inFile<- data()
-        req(inFile)
-       
-          f<-forecast(fit(), h=input$period)
-         plot(f)
+      output$arimaForecastPlot<-renderPlot({
+        
+        plot(arimaForecast())
         
       })
       
     })
     
-    fit<- reactive({
-      inFile<- data()
-      req(inFile)
-      fit<-arimaFit()            
-      fit
-    })
+    #fit<- reactive({
+    #  inFile<- data()
+     # fit<-arimaFit()            
+     # req(inFile)
+     # fit
+    #})
     
     
     #_____________Creating conditional panel_________
 
     
-    output$fileUploaded <- reactive({
-      return(!is.null(data()))
-    })
+  #  output$fileUploaded <- reactive({
+     # return(!is.null(data()))
+    #})
     
-    outputOptions(output, 'fileUploaded', suspendWhenHidden=FALSE)
+    #outputOptions(output, 'fileUploaded', suspendWhenHidden=FALSE)
     
     
     #_______________Warnings handler_________________

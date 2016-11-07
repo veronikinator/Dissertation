@@ -17,4 +17,3 @@ library(ggplot2)
 library(devtools)
 library(shinyIncubator)
 library(markdown)
-
