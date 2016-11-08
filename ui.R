@@ -61,6 +61,7 @@ shinyUI(
     tabPanel("Space-State",
                sidebarPanel(
                  selectInput("StateModel", "Choose model:", choices=c("Structural", "Autoregressive")),
+                 numericInput("statePeriod", "Choose a number of periods to forecast:", 10),
                  conditionalPanel("input.StateModel=='Structural'",
                                   selectInput("paramsState", "Choose columns", choices = NULL),
                          
@@ -72,7 +73,9 @@ shinyUI(
                  actionButton("analyseState", label = "Analyse")
                  ),
              mainPanel(
-               textOutput("MARSS")
+               textOutput("MARSS"),
+               DT::dataTableOutput('stateForecast'),
+               plotOutput("stateForecastPlot")
                )
     )
 ))

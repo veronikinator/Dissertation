@@ -202,6 +202,27 @@ shinyServer(
         summary(mars$par)
         
       })
+      
+      stateForecast<- reactive({
+        
+        data<-state()
+        forecast(data, h= input$statePeriod)
+        
+      })
+      
+      
+      output$stateForecast<- DT::renderDataTable({
+        
+        table<- data.frame(stateForecast())
+        colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95")
+        DT::datatable(table)
+        
+      })
+      
+      output$stateForecastPlot<-renderPlot({
+        
+        plot(stateForecast())
+      })
     })
     
     
