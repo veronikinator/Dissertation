@@ -54,13 +54,12 @@ shinyUI(
                tags$h4("Forecast Table"),
                DT::dataTableOutput('arimaForecast'),
                plotOutput("arimaForecastPlot"),
-               plotOutput("arimaPlot"),
-               textOutput("arimaPrint")
+               plotOutput("arimaPlot")
                )
       ),
     tabPanel("Space-State",
                sidebarPanel(
-                 selectInput("StateModel", "Choose model:", choices=c("Structural", "Autoregressive")),
+                 selectInput("StateModel", "Choose model:", choices=c("Structural", "dlm", "Autoregressive")),
                  numericInput("statePeriod", "Choose a number of periods to forecast:", 10),
                  conditionalPanel("input.StateModel=='Structural'",
                                   selectInput("paramsState", "Choose columns", choices = NULL),
@@ -70,12 +69,19 @@ shinyUI(
                  conditionalPanel("input.StateModel=='Autoregressive'",
                                   checkboxGroupInput("paramsMARSS", "Choose columns", choices = NULL)
                                   ),
+                 conditionalPanel("input.StateModel=='dlm'",
+                                  selectInput("typeDlm", "Model type:", choices = c("Polynomial", "Regression")),
+                                  selectInput("paramsDlm", "Choose columns", choices = NULL),
+                                  textInput("dlmParams", "Choose parameters for the model:", "0,0,0,0")
+                 ),
                  actionButton("analyseState", label = "Analyse")
                  ),
              mainPanel(
-               textOutput("MARSS"),
+               textOutput("stateModel"),
+               plotOutput("stateFittedPlot"),
                DT::dataTableOutput('stateForecast'),
-               plotOutput("stateForecastPlot")
+               plotOutput("stateForecastPlot"),
+               plotOutput("stateDiag")
                )
     )
 ))

@@ -23,6 +23,7 @@ shinyServer(
       vars1<-makeList(vars)
       updateSelectInput(session, "paramsAutoArima","Select Columns:", choices = vars)
       updateSelectInput(session, "paramsState","Select Columns:", choices = vars)
+      updateSelectInput(session, "paramsDlm","Select Columns:", choices = vars)
       updateSelectInput(session, "paramsArima", "Select data:", choices = vars)
       updateCheckboxGroupInput(session, inputId="xregParamsArimax", choices = vars, selected=NULL)
       updateCheckboxGroupInput(session, inputId="paramsMARSS", choices = vars, selected=vars[1])
@@ -37,16 +38,13 @@ shinyServer(
     })
 
 
-    #_______________Fitting the models_____
+    #_______________Arima_____
     
     
     xreg<- reactive({
       input$xregParamsArimax
     })
-    
-    output$arimaPrint<- renderPrint({
-      xreg()
-    })
+
     
     arimaFit<-reactive({
       
@@ -83,18 +81,22 @@ shinyServer(
       
     })
     
-    state<-reactive({
-      inFile<- data()
-      data1<-inFile[, input$paramsState]
-      type<-input$StateType
-      StructTS(data1, type=type)
-      
+    logText <- reactive({
+      capture.output(arimaFit())
     })
     
     
     #______Construction forecast output_________
     
     observeEvent(input$analyseArima, {
+      
+      output$console<- renderPrint({
+        
+        logText()
+        
+      })
+      
+      
       output$arimaForecast<- DT::renderDataTable({
         
           #table<- data.frame(MARSSsimulate(marss(), tSteps=input$period)$sim.data)
@@ -120,13 +122,6 @@ shinyServer(
       
     })
     
-    #fit<- reactive({
-    #  inFile<- data()
-     # fit<-arimaFit()            
-     # req(inFile)
-     # fit
-    #})
-    
     
     #_____________Creating conditional panel_________
 
@@ -145,35 +140,61 @@ shinyServer(
     })
     
     outputOptions(output, 'warn', suspendWhenHidden=FALSE)
+
     
-    #___________Console output_____________
+  #__________ Space-State modeling
+  
+  state<-reactive({
     
-    logText <- reactive({
-      capture.output(arimaFit())
-    })
+    inFile<- data()
+    data1<-inFile[, input$paramsState]
+    type<-input$StateType
+    StructTS(data1, type=type)
     
-    observeEvent(input$analyse, {
-      output$console<- renderPrint({
-        if (input$StateModel=='Autoregressive'){
-          NULL
-        } else{
-          logText()
-        }
-        
-      })
+  })
+  
+  
+  buildModReg<-function(v){
+    ##########################
+    ###TODO: 4 parameters input handler
+    ############################
+    dV<- exp(v[1])
+    dW<- c(exp(v[2]), 0)
+    m0<- v[3:4]
+    dlmModReg(x, dV= dV, dW=dW, m0=m0)
     
-      output$warnings<- renderPrint({
-        warning()
-      })
+  }  
+  
+  
+  initGuessParams<- reactive({
     
-      output$State<-renderPrint({
-        "state"
-      })
-    })
+    inFile<- data()
+    data<-inFile[, input$paramsDlm]
+    varGuess<- var(diff(data), na.rm=TRUE)
+    mu0Guess<-data[1]
+    lambdaGuess<-mean(diff(data), na.rm=TRUE)
+    params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
+    mle<- dlmMLE(data, parm = params, build = buildModReg,  method = "Nelder-Mead")
+    mle
     
+  })
+  
+  dlm<-reactive({
     
+    x<-input$dlmParams
+    x<-as.numeric(unlist(strsplit(x, ",")))
     
+    init<-initGuessParams()
+    if (x != c(0,0,0,0)){
+      params<- x
+    } else{
+      params<- init$par
+    }
+    dlm<-buildModReg(params)
+    dlm
     
+  })
+  
     #__________MARSS handler__________
     
     MARSSHandler<-reactive({
@@ -188,6 +209,7 @@ shinyServer(
       dat<-as.matrix(dat)
       dat<-t(dat)
       dat
+      
     })
     
     marss<-reactive({
@@ -197,9 +219,35 @@ shinyServer(
     })
     
     observeEvent(input$analyseState,{
-      output$MARSS<-renderPrint({
-        mars<-marss()
-        summary(mars$par)
+      
+      
+      modelState<- reactive({
+        
+        model<- switch(input$StateModel,
+                       "dlm"={
+                         dlm()
+                       },
+                       "Structural"={
+                         state()
+                       },
+                       "Autoregressive"={
+                         marss()
+                       })
+        model
+  
+      })
+      
+      
+      output$stateModel<- renderPrint({
+        
+        model<- modelState()
+        summary(model)
+        
+      })
+      
+      output$stateDiag<-renderPlot({
+        
+        tsdiag(modelState())
         
       })
       
@@ -218,6 +266,17 @@ shinyServer(
         DT::datatable(table)
         
       })
+      
+      output$stateFittedPlot<- renderPlot({
+        
+        data<-state()
+        TimeSeries <- window(data$data, start = 0)
+        plot(TimeSeries, type = "o")
+        lines(fitted(data), lty = "dashed", lwd = 2)
+        lines(tsSmooth(data), lty = "dotted", lwd = 2)
+        legend("bottomright", legend = c("Data","Smoothed", "Filtered"),lty = c(1,1,1), col=c("black","blue", "red"))
+        
+        })
       
       output$stateForecastPlot<-renderPlot({
         
