@@ -70,7 +70,8 @@ shinyUI(
                                   checkboxGroupInput("paramsMARSS", "Choose columns", choices = NULL)
                                   ),
                  conditionalPanel("input.StateModel=='dlm'",
-                                  selectInput("typeDlm", "Model type:", choices = c("Polynomial", "Regression")),
+                                  #selectInput("typeDlm", "Model type:", choices = c("Polynomial", "Regression")),
+                                  selectInput("typeDlm", "Model type:", choices = c("Constant Coefficients", "Time-varying coefficients")),
                                   selectInput("paramsDlm", "Choose columns", choices = NULL),
                                   textInput("dlmParams", "Choose parameters for the model:", "0,0,0,0")
                  ),

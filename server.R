@@ -154,13 +154,24 @@ shinyServer(
   })
   
   
-  buildModReg<-function(v){
+  buildModRegConst<-function(v){
     ##########################
     ###TODO: 4 parameters input handler
     ############################
     dV<- exp(v[1])
     dW<- c(exp(v[2]), 0)
     m0<- v[3:4]
+    dlmModReg(x, dV= dV, dW=dW, m0=m0)
+    
+  } 
+  
+  buildModRegVariant<-function(v){
+    ##########################
+    ###TODO: 4 parameters input handler
+    ############################
+    dV<- exp(v[1])
+    dW<- c(exp(v[2:3]))
+    m0<- v[4:5]
     dlmModReg(x, dV= dV, dW=dW, m0=m0)
     
   }  
@@ -174,8 +185,17 @@ shinyServer(
     mu0Guess<-data[1]
     lambdaGuess<-mean(diff(data), na.rm=TRUE)
     params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
-    mle<- dlmMLE(data, parm = params, build = buildModReg,  method = "Nelder-Mead")
+    mle<- dlmMLE(data, parm = params, build = buildModRegConst,  method = "Nelder-Mead")
     mle
+    
+  })
+  
+  observe({
+    if (input$typeDlm=="Time-varying coefficients"){
+      updateTextInput(session, "dlmParams", "Choose parameters for the model:", "0,0,0,0,0")
+    } else{
+      updateTextInput(session, "dlmParams", "Choose parameters for the model:", "0,0,0,0")
+    }
     
   })
   
@@ -185,12 +205,17 @@ shinyServer(
     x<-as.numeric(unlist(strsplit(x, ",")))
     
     init<-initGuessParams()
-    if (x != c(0,0,0,0)){
+    if (x != c(0,0,0,0) | x!= c(0,0,0,0,0)){
       params<- x
     } else{
       params<- init$par
     }
-    dlm<-buildModReg(params)
+    
+    if (input$typeDlm=="Time-varying coefficients"){
+      dlm<- buildModRegVariant(params)
+    } else{
+      dlm<-buildModRegConst(params)
+    }
     dlm
     
   })
@@ -241,7 +266,7 @@ shinyServer(
       output$stateModel<- renderPrint({
         
         model<- modelState()
-        summary(model)
+        capture.output(model)
         
       })
       
