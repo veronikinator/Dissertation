@@ -322,8 +322,18 @@ shinyServer(
       output$stateFittedPlot<- renderPlot({
         
         if (input$StateModel=="dlm"){
-          plot(cbind(filterDlm()$y, filterDlm()$m[-1],smoothDlm()$s[-1]), plot.type='s',
-               col=c("black","red","blue"), ylab="Level", main="Data", lwd=c(1,2,2))
+          data1<- data()
+          data<-data1[, input$paramsDlm]
+          filtered<- dlmFilter(data, dlm())
+          x<- data1[, input$explainDlm]
+          smooth<- dlmSmooth(data, dlm())
+          filt<- filtered$m[-1,1]+ x* filtered$m[-1,2]
+          smoothed<- smooth$s[-1,1]+ x* smooth$s[-1,2]
+          plot(data, type="o", pch=19, bg="black")
+          lines(filt ,lty = "dashed", lwd = 2, col="red")
+          lines(smoothed,lty = "dotted", lwd = 2, col="blue")
+          legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
+          
         } else {
           data<-state()
           data1<- data()
