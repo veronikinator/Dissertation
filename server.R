@@ -185,7 +185,11 @@ shinyServer(
     mu0Guess<-data[1]
     lambdaGuess<-mean(diff(data), na.rm=TRUE)
     params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
-    mle<- dlmMLE(data, parm = params, build = buildModRegConst,  method = "Nelder-Mead")
+    if (input$typeDlm=="Time-varying coefficients"){
+      mle<- dlmMLE(data, parm = params, build = buildModRegVariant,  method = "Nelder-Mead") 
+    } else {
+      mle<- dlmMLE(data, parm = params, build = buildModRegConst,  method = "Nelder-Mead")
+    }
     mle
     
   })
@@ -220,6 +224,24 @@ shinyServer(
     
   })
   
+  smoothDlm<- reactive({
+    inFile<- data()
+    data<-inFile[, input$paramsDlm]
+    model<- dlm()
+    smooth<-dlmSmooth(data, model)
+    smooth
+  })
+  
+  
+  filterDlm<-reactive({
+    inFile<- data()
+    data<-inFile[, input$paramsDlm]
+    model<- dlm()
+    fil<-dlmFilter(data, model)
+    fil
+    
+  })
+  
     #__________MARSS handler__________
     
     MARSSHandler<-reactive({
@@ -250,7 +272,7 @@ shinyServer(
         
         model<- switch(input$StateModel,
                        "dlm"={
-                         dlm()
+                         filterDlm()
                        },
                        "Structural"={
                          state()
@@ -294,13 +316,20 @@ shinyServer(
       
       output$stateFittedPlot<- renderPlot({
         
-        data<-state()
-        TimeSeries <- window(data$data, start = 0)
-        plot(TimeSeries, type = "o")
-        lines(fitted(data), lty = "dashed", lwd = 2)
-        lines(tsSmooth(data), lty = "dotted", lwd = 2)
-        legend("bottomright", legend = c("Data","Smoothed", "Filtered"),lty = c(1,1,1), col=c("black","blue", "red"))
-        
+        if (input$StateModel=="dlm"){
+          plot(cbind(filterDlm()$y, filterDlm()$m[-1],smoothDlm()$s[-1]), plot.type='s',
+               col=c("black","red","blue"), ylab="Level", main="Data", lwd=c(1,2,2))
+        } else {
+          data<-state()
+          data1<- data()
+          data1<-data1[, input$paramsState]
+          
+          plot(data1, type="o", pch=19, bg="black")
+          lines(fitted(data)[,1],lty = "dashed", lwd = 2, col="red")
+          lines(tsSmooth(data)[,1],lty = "dotted", lwd = 2, col="blue")
+          legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
+          
+        }
         })
       
       output$stateForecastPlot<-renderPlot({
