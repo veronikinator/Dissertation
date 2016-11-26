@@ -24,6 +24,7 @@ shinyServer(
       updateSelectInput(session, "paramsAutoArima","Select Columns:", choices = vars)
       updateSelectInput(session, "paramsState","Select Columns:", choices = vars)
       updateSelectInput(session, "paramsDlm","Select Columns:", choices = vars)
+      updateSelectInput(session, "explainDlm","Choose explanatory variable:", choices = vars)
       updateSelectInput(session, "paramsArima", "Select data:", choices = vars)
       updateCheckboxGroupInput(session, inputId="xregParamsArimax", choices = vars, selected=NULL)
       updateCheckboxGroupInput(session, inputId="paramsMARSS", choices = vars, selected=vars[1])
@@ -161,6 +162,8 @@ shinyServer(
     dV<- exp(v[1])
     dW<- c(exp(v[2]), 0)
     m0<- v[3:4]
+    data<-data()
+    x<- data[, input$explainDlm]
     dlmModReg(x, dV= dV, dW=dW, m0=m0)
     
   } 
@@ -172,6 +175,8 @@ shinyServer(
     dV<- exp(v[1])
     dW<- c(exp(v[2:3]))
     m0<- v[4:5]
+    data<- data()
+    x<- data[, input$explainDlm]
     dlmModReg(x, dV= dV, dW=dW, m0=m0)
     
   }  
@@ -328,7 +333,6 @@ shinyServer(
           lines(fitted(data)[,1],lty = "dashed", lwd = 2, col="red")
           lines(tsSmooth(data)[,1],lty = "dotted", lwd = 2, col="blue")
           legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
-          
         }
         })
       

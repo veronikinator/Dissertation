@@ -73,6 +73,7 @@ shinyUI(
                                   #selectInput("typeDlm", "Model type:", choices = c("Polynomial", "Regression")),
                                   selectInput("typeDlm", "Model type:", choices = c("Constant Coefficients", "Time-varying coefficients")),
                                   selectInput("paramsDlm", "Choose columns", choices = NULL),
+                                  selectInput("explainDlm", "Choose explanatory variable", choices = NULL),
                                   textInput("dlmParams", "Choose parameters for the model:", "0,0,0,0")
                  ),
                  actionButton("analyseState", label = "Analyse")
