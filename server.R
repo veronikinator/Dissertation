@@ -7,6 +7,8 @@ shinyServer(
   
     #________________Getting all the uploaded data_______
     
+    #___________Handling data format for the MARSS package
+    
     makeList<- function(data){
       l<-list()
       for ( i in 1:length(data)){
@@ -15,12 +17,17 @@ shinyServer(
       return(l)
     }
     
+    
+    # _____________________Data table input from the ui_____________________
+    
     data<-reactive({
       inFile<- input$data
       req(inFile)
       table<-read.csv(inFile$datapath)
       vars<-names(table)
       vars1<-makeList(vars)
+      
+      #Updating the ui with all the parameters availiable from the table
       updateSelectInput(session, "paramsAutoArima","Select Columns:", choices = vars)
       updateSelectInput(session, "paramsState","Select Columns:", choices = vars)
       updateSelectInput(session, "paramsDlm","Select Columns:", choices = vars)
@@ -39,14 +46,16 @@ shinyServer(
     })
 
 
-    #_______________Arima_____
+    #_______________Arima_____-----
     
     
+    #_________Reading the user input__________
     xreg<- reactive({
       input$xregParamsArimax
     })
 
     
+    #________Fitting an Arima model ______________
     arimaFit<-reactive({
       
       inFile<- data()
@@ -72,6 +81,10 @@ shinyServer(
       model
     })
     
+    
+    
+    #____________ Forecasting the sata with Arima_________
+    
     arimaForecast<- reactive({
       if (is.null(xreg())){
         
@@ -79,12 +92,17 @@ shinyServer(
       } else{
         f<-forecast(arimaFit(), h=input$arimaPeriod, xreg=data()[,xreg()])
       }
+      f
       
     })
     
-    logText <- reactive({
+    
+    
+    logTextArima <- reactive({
       capture.output(arimaFit())
     })
+    
+    
     
     
     #______Construction forecast output_________
@@ -93,7 +111,7 @@ shinyServer(
       
       output$console<- renderPrint({
         
-        logText()
+        logTextArima()
         
       })
       
@@ -155,6 +173,7 @@ shinyServer(
   })
   
   
+  #_______ Linear regression space state model with constant coefficients
   buildModRegConst<-function(v){
     ##########################
     ###TODO: 4 parameters input handler
@@ -168,6 +187,7 @@ shinyServer(
     
   } 
   
+  #_______ Linear regression space state model with time varying coefficients
   buildModRegVariant<-function(v){
     ##########################
     ###TODO: 4 parameters input handler
@@ -182,6 +202,7 @@ shinyServer(
   }  
   
   
+  #____________Calculating startign values for the optim in dlm()
   initGuessParams<- reactive({
     
     inFile<- data()
@@ -189,16 +210,19 @@ shinyServer(
     varGuess<- var(diff(data), na.rm=TRUE)
     mu0Guess<-data[1]
     lambdaGuess<-mean(diff(data), na.rm=TRUE)
-    params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
     if (input$typeDlm=="Time-varying coefficients"){
+      params<-c(log(varGuess), log(varGuess/5), log(varGuess/5), mu0Guess, lambdaGuess)
       mle<- dlmMLE(data, parm = params, build = buildModRegVariant,  method = "Nelder-Mead") 
     } else {
+      params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
       mle<- dlmMLE(data, parm = params, build = buildModRegConst,  method = "Nelder-Mead")
     }
     mle
     
   })
   
+  
+  #___________Updating a size of input in the ui depending on the type of space-state model 
   observe({
     if (input$typeDlm=="Time-varying coefficients"){
       updateTextInput(session, "dlmParams", "Choose parameters for the model:", "0,0,0,0,0")
@@ -208,6 +232,8 @@ shinyServer(
     
   })
   
+  
+  #__________Constructing a dlm model with the paramteres
   dlm<-reactive({
     
     x<-input$dlmParams
@@ -229,6 +255,8 @@ shinyServer(
     
   })
   
+  
+  #__________Smoothign the data usign the dlm model
   smoothDlm<- reactive({
     inFile<- data()
     data<-inFile[, input$paramsDlm]
@@ -238,6 +266,8 @@ shinyServer(
   })
   
   
+  
+  #___________Kalman Filtering for the dlm model
   filterDlm<-reactive({
     inFile<- data()
     data<-inFile[, input$paramsDlm]
