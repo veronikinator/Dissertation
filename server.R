@@ -327,6 +327,14 @@ shinyServer(
         
       })
       
+      logTextState <- reactive({
+        capture.output(modelState())
+      })
+      
+      output$consoleState<- renderPrint({
+        logTextState()
+      })
+      
       output$stateDiag<-renderPlot({
         
         tsdiag(modelState())

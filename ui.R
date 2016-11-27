@@ -76,10 +76,13 @@ shinyUI(
                                   selectInput("explainDlm", "Choose explanatory variable", choices = NULL),
                                   textInput("dlmParams", "Choose parameters for the model:", "0,0,0,0")
                  ),
-                 actionButton("analyseState", label = "Analyse")
+                 actionButton("analyseState", label = "Analyse"),
+                 conditionalPanel("input.analyseState > 0",
+                                  tags$br(),
+                                  tags$div(class="box", textOutput("consoleState")))
                  ),
              mainPanel(
-               textOutput("stateModel"),
+               #textOutput("stateModel"),
                plotOutput("stateFittedPlot"),
                DT::dataTableOutput('stateForecast'),
                plotOutput("stateForecastPlot"),
