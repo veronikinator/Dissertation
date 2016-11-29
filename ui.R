@@ -71,10 +71,14 @@ shinyUI(
                                   ),
                  conditionalPanel("input.StateModel=='dlm'",
                                   #selectInput("typeDlm", "Model type:", choices = c("Polynomial", "Regression")),
-                                  selectInput("typeDlm", "Model type:", choices = c("Constant Coefficients", "Time-varying coefficients")),
+                                  selectInput("typeDlm", "Model type:", choices = c("Constant Coefficients", "Time-varying coefficients", "Manual")),
                                   selectInput("paramsDlm", "Choose columns", choices = NULL),
                                   selectInput("explainDlm", "Choose explanatory variable", choices = NULL),
-                                  textInput("dlmParams", "Choose parameters for the model:", "0,0,0,0")
+                                  textInput("dlmParams", "Choose parameters for the model:", "0,0,0,0"),
+                                  conditionalPanel("input.typeDlm=='Manual",
+                                                   numericInput("dlmM0", "M0:", 0),
+                                                   numericInput("dlmPolyOrder", "Polynomial order:", 1))
+                                  
                  ),
                  actionButton("analyseState", label = "Analyse"),
                  conditionalPanel("input.analyseState > 0",
@@ -82,7 +86,7 @@ shinyUI(
                                   tags$div(class="box", textOutput("consoleState")))
                  ),
              mainPanel(
-               #textOutput("stateModel"),
+               #textOutput("smother"),
                plotOutput("stateFittedPlot"),
                DT::dataTableOutput('stateForecast'),
                plotOutput("stateForecastPlot"),

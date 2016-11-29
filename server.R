@@ -46,7 +46,7 @@ shinyServer(
     })
 
 
-    #_______________Arima_____-----
+    ####################### Arima ###############################
     
     
     #_________Reading the user input__________
@@ -202,6 +202,14 @@ shinyServer(
   }  
   
   
+  #_________Constructing manual dlm_________________
+  
+  buildDlm<- function(x){
+    rw <- rw <- dlmModPoly(1, dV=x[1], dW=x[2], C0=x[3], m0=x[4])
+    return(rw)
+  }
+  
+  
   #____________Calculating startign values for the optim in dlm()
   initGuessParams<- reactive({
     
@@ -212,7 +220,10 @@ shinyServer(
     lambdaGuess<-mean(diff(data), na.rm=TRUE)
     if (input$typeDlm=="Time-varying coefficients"){
       params<-c(log(varGuess), log(varGuess/5), log(varGuess/5), mu0Guess, lambdaGuess)
-      mle<- dlmMLE(data, parm = params, build = buildModRegVariant,  method = "Nelder-Mead") 
+      mle<- dlmMLE(data, parm = params, build = buildDlm,  method = "Nelder-Mead") 
+    } else if (input$typeDlm=="Manual"){
+      params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
+      mle<- dlmMLE(data, parm = params, build = buildDlm,  method = "Nelder-Mead")
     } else {
       params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
       mle<- dlmMLE(data, parm = params, build = buildModRegConst,  method = "Nelder-Mead")
@@ -248,7 +259,9 @@ shinyServer(
     
     if (input$typeDlm=="Time-varying coefficients"){
       dlm<- buildModRegVariant(params)
-    } else{
+    } else if (input$typeDlm=="Manual"){
+      dlm<- buildDlm(params)
+    } else {
       dlm<-buildModRegConst(params)
     }
     dlm
@@ -263,6 +276,11 @@ shinyServer(
     model<- dlm()
     smooth<-dlmSmooth(data, model)
     smooth
+  })
+  
+  
+  output$smother<-renderPrint({
+    filterDlm()
   })
   
   
@@ -307,7 +325,7 @@ shinyServer(
         
         model<- switch(input$StateModel,
                        "dlm"={
-                         filterDlm()
+                         dlm()
                        },
                        "Structural"={
                          state()
@@ -363,10 +381,15 @@ shinyServer(
           data1<- data()
           data<-data1[, input$paramsDlm]
           filtered<- dlmFilter(data, dlm())
-          x<- data1[, input$explainDlm]
           smooth<- dlmSmooth(data, dlm())
-          filt<- filtered$m[-1,1]+ x* filtered$m[-1,2]
-          smoothed<- smooth$s[-1,1]+ x* smooth$s[-1,2]
+          if (input$typeDlm=="Manual"){
+            filt<-dropFirst(filtered$m)
+            smoothed<-dropFirst(smooth$s)
+          } else {
+            x<- data1[, input$explainDlm]
+            filt<- filtered$m[-1,1]+ x* filtered$m[-1,2]
+            smoothed<- smooth$s[-1,1]+ x* smooth$s[-1,2]
+          }
           plot(data, type="o", pch=19, bg="black")
           lines(filt ,lty = "dashed", lwd = 2, col="red")
           lines(smoothed,lty = "dotted", lwd = 2, col="blue")
