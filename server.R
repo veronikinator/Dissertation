@@ -355,14 +355,25 @@ shinyServer(
       
       output$stateDiag<-renderPlot({
         
-        tsdiag(modelState())
-        
+        if ( input$StateModel=='Structural'){
+          tsdiag(modelState())
+        } else{
+          NULL
+        }
       })
       
       stateForecast<- reactive({
         
-        data<-state()
-        forecast(data, h= input$statePeriod)
+        
+        if ( input$StateModel=="Structural"){
+          data<-state()
+           f<-forecast(data, h= input$statePeriod)
+        } else if (input$StateModel=="dlm"){
+          data<- filterDlm()
+          f<- dlmForecast(data, nAhead= input$statePeriod)
+          
+        }
+        f
         
       })
       
