@@ -91,7 +91,6 @@ shinyUI(
                plotOutput("stateFittedPlot"),
                DT::dataTableOutput('stateForecast'),
                plotOutput("stateForecastPlot"),
-               plotOutput("stateDiag")
-               )
+               plotOutput("stateDiag"))
     )
 ))

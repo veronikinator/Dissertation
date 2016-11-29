@@ -388,8 +388,8 @@ shinyServer(
           colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95") 
         } else {
           data<-stateForecast()
-          table<-data.frame(unlist(data$f))
-          colnames(table)<-c("Forecast obs")  
+          table<-data.frame(unlist(data$f), data$newObs)
+          colnames(table)<-rep("Forecast obs", input$statePeriod+1)  
         }
         DT::datatable(table)
         
@@ -433,11 +433,11 @@ shinyServer(
           data1<- data()
           data<-data1[, input$paramsDlm]
           forecast<-stateForecast()
-          plot(c(rep(NA, length(data)),forecast$f), type = 'o', lwd = 2, pch = 16)
+          plot(c(rep(NA, length(data)),forecast$f), type = 'o', lwd = 2, pch = 16, ylab = "Data")
           lines(data,type = 'o')
           invisible(lapply(forecast$newObs, function(x) lines(c(rep(NA,length(data)),x), col = "darkgrey",
                                                               type = 'o', pch = 4)))
-          #lines(forecast$f, type = 'o', lwd = 2, pch = 16)
+          abline(v = length(data)+0.5, lty = "dashed")
 
           
         } else {
