@@ -373,8 +373,7 @@ shinyServer(
            f<-forecast(data, h= input$statePeriod)
         } else if (input$StateModel=="dlm"){
           data<- filterDlm()
-          fr<- dlmForecast(data, nAhead = input$statePeriod, sampleNew=input$statePeriod)
-          f<- data.frame(fr$newObs, fr$newStates)
+          f<- dlmForecast(data, nAhead = input$statePeriod, sampleNew=input$statePeriod)
           
         }
         f
@@ -384,8 +383,14 @@ shinyServer(
       
       output$stateForecast<- DT::renderDataTable({
         
-        table<- data.frame(stateForecast())
-        colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95")
+        if (input$StateModel=="Structural"){
+          table<- data.frame(stateForecast())
+          colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95") 
+        } else {
+          data<-stateForecast()
+          table<-data.frame(unlist(data$f))
+          colnames(table)<-c("Forecast obs")  
+        }
         DT::datatable(table)
         
       })
@@ -424,7 +429,20 @@ shinyServer(
       
       output$stateForecastPlot<-renderPlot({
         
-        plot(stateForecast())
+        if (input$StateModel=="dlm"){
+          data1<- data()
+          data<-data1[, input$paramsDlm]
+          forecast<-stateForecast()
+          plot(c(rep(NA, length(data)),forecast$f), type = 'o', lwd = 2, pch = 16)
+          lines(data,type = 'o')
+          invisible(lapply(forecast$newObs, function(x) lines(c(rep(NA,length(data)),x), col = "darkgrey",
+                                                              type = 'o', pch = 4)))
+          #lines(forecast$f, type = 'o', lwd = 2, pch = 16)
+
+          
+        } else {
+          plot(stateForecast()) 
+        }
       })
     })
     
