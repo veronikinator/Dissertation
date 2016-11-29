@@ -237,7 +237,10 @@ shinyServer(
   observe({
     if (input$typeDlm=="Time-varying coefficients"){
       updateTextInput(session, "dlmParams", "Choose parameters for the model:", "0,0,0,0,0")
-    } else{
+      toggle(id="input.explainDlm")
+    } else if (input$typeDlm=="Constant Coefficients"){
+      toggle(id="input$explainDlm")
+    } else {
       updateTextInput(session, "dlmParams", "Choose parameters for the model:", "0,0,0,0")
     }
     
@@ -370,7 +373,8 @@ shinyServer(
            f<-forecast(data, h= input$statePeriod)
         } else if (input$StateModel=="dlm"){
           data<- filterDlm()
-          f<- dlmForecast(data, nAhead= input$statePeriod)
+          fr<- dlmForecast(data, nAhead = input$statePeriod, sampleNew=input$statePeriod)
+          f<- data.frame(fr$newObs, fr$newStates)
           
         }
         f
