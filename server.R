@@ -205,7 +205,8 @@ shinyServer(
   #_________Constructing manual dlm_________________
   
   buildDlm<- function(x){
-    rw <- rw <- dlmModPoly(1, dV=x[1], dW=x[2], C0=x[3], m0=x[4])
+    n<- input$dlmPolyOrder
+    rw <- rw <- dlmModPoly(n, dV=x[1], dW=x[2], C0=x[3], m0=x[4])
     return(rw)
   }
   
