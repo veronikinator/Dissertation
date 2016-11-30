@@ -204,7 +204,7 @@ shinyServer(
   
   #_________Constructing manual dlm_________________
   
-  buildDlm<- function(x){
+  buildDlmPoly<- function(x){
     n<- input$dlmPolyOrder
     rw <- rw <- dlmModPoly(n, dV=x[1], dW=x[2], C0=x[3], m0=x[4])
     return(rw)
@@ -221,10 +221,10 @@ shinyServer(
     lambdaGuess<-mean(diff(data), na.rm=TRUE)
     if (input$typeDlm=="Time-varying coefficients"){
       params<-c(log(varGuess), log(varGuess/5), log(varGuess/5), mu0Guess, lambdaGuess)
-      mle<- dlmMLE(data, parm = params, build = buildDlm,  method = "Nelder-Mead") 
+      mle<- dlmMLE(data, parm = params, build = buildModRegVariant,  method = "Nelder-Mead") 
     } else if (input$typeDlm=="Manual"){
       params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
-      mle<- dlmMLE(data, parm = params, build = buildDlm,  method = "Nelder-Mead")
+      mle<- dlmMLE(data, parm = params, build = buildDlmPoly,  method = "Nelder-Mead")
     } else {
       params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
       mle<- dlmMLE(data, parm = params, build = buildModRegConst,  method = "Nelder-Mead")
