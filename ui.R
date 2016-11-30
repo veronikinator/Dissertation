@@ -76,18 +76,24 @@ shinyUI(
                                   conditionalPanel("input.typeDlm!='Manual'",
                                                    selectInput("explainDlm", "Choose explanatory variable", choices = NULL)),
                                   textInput("dlmParams", "Choose parameters for the model:", "0,0,0,0"),
-                                  conditionalPanel("input.typeDlm=='Manual",
-                                                   numericInput("dlmM0", "M0:", 0),
+                                  conditionalPanel("input.typeDlm=='Manual'",
+                                                   #numericInput("dlmM0", "M0:", 0),
                                                    numericInput("dlmPolyOrder", "Polynomial order:", 1),
                                                    radioButtons("seasType", label = "Type of seasonal model",
-                                                                choices = list("Seasonal" = 1, "Fourier form" = 2, "No seasonality"=3), 
-                                                                selected = 3),
-                                                   conditionalPanel("input.seasType==2",
+                                                                choices = c("Seasonal", "Fourier form", "No seasonality"), 
+                                                                selected = "No seasonality"),
+                                                   conditionalPanel("input.seasType=='Fourier form'",
                                                                     numericInput("trigHarmonics", "Number of harmonics:", 1),
                                                                     numericInput("trigPeriod", "Period:", 1),
                                                                     numericInput("trigVarNoise", "Variance of observation noise:", 1),
                                                                     numericInput("trigVarSys", "Variance of system noise:", 0)
-                                                                    ))
+                                                                    ),
+                                                   conditionalPanel("input.seasType=='Seasonal'",
+                                                                    numericInput("seasFreq", "Frequency:", 1),
+                                                                    numericInput("seasVarNoise", "Variance of observation noise:", 1),
+                                                                    numericInput("seasVarSys", "Variance of system noise:", 0)
+                                                   )
+                                                   )
                                 
                  ),
                  actionButton("analyseState", label = "Analyse"),
@@ -96,7 +102,6 @@ shinyUI(
                                   tags$div(class="box", textOutput("consoleState")))
                  ),
              mainPanel(
-               #textOutput("smother"),
                plotOutput("stateFittedPlot"),
                DT::dataTableOutput('stateForecast'),
                plotOutput("stateForecastPlot"),

@@ -211,12 +211,10 @@ shinyServer(
   }
   
   buildDlmSeas<- reactive({
-    if (input$seasType==1){
-      dlmModSeas()
-    } else if (input$seasType==2){
+    if (input$seasType=="Seasonal"){
+      dlmModSeas( frequency= input$seasFreq, dV=input$seasVarNoise, dW=input$seasVarSys)
+    } else if (input$seasType=="Fourier form"){
       dlmModTrig(q=input$trigHarmonics, tau=input$trigPeriod, dV=input$trigVarNoise ,dW=input$trigVarSys)
-    }else {
-      NULL
     }
   })
   
@@ -249,9 +247,6 @@ shinyServer(
   observe({
     if (input$typeDlm=="Time-varying coefficients"){
       updateTextInput(session, "dlmParams", "Choose parameters for the model:", "0,0,0,0,0")
-      toggle(id="input.explainDlm")
-    } else if (input$typeDlm=="Constant Coefficients"){
-      toggle(id="input$explainDlm")
     } else {
       updateTextInput(session, "dlmParams", "Choose parameters for the model:", "0,0,0,0")
     }
@@ -276,7 +271,11 @@ shinyServer(
       dlm<- buildModRegVariant(params)
     } else if (input$typeDlm=="Manual"){
       
-      dlm<- buildDlmPoly(params) + buildDlmSeas()
+      if (input$seasType=="No seasonality"){
+        dlm<- buildDlmPoly(params)
+      } else {
+        dlm<- buildDlmPoly(params) + buildDlmSeas() 
+      }
    
     } else {
       dlm<-buildModRegConst(params)
