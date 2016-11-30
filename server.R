@@ -361,7 +361,7 @@ shinyServer(
         if ( input$StateModel=='Structural'){
           tsdiag(modelState())
         } else{
-          NULL
+          tsdiag(filterDlm())
         }
       })
       
@@ -394,6 +394,11 @@ shinyServer(
         DT::datatable(table)
         
       })
+      
+      
+      sortDlmForecast<- function(x){
+        
+      }
       
       output$stateFittedPlot<- renderPlot({
         
