@@ -89,7 +89,7 @@ shinyUI(
                                                                     numericInput("trigVarSys", "Variance of system noise:", 0)
                                                                     ),
                                                    conditionalPanel("input.seasType=='Seasonal'",
-                                                                    numericInput("seasFreq", "Frequency:", 1),
+                                                                    numericInput("seasFreq", "Frequency:", 2),
                                                                     numericInput("seasVarNoise", "Variance of observation noise:", 1),
                                                                     numericInput("seasVarSys", "Variance of system noise:", 0)
                                                    )

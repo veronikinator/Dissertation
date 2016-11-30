@@ -261,7 +261,7 @@ shinyServer(
     x<-as.numeric(unlist(strsplit(x, ",")))
     
     init<-initGuessParams()
-    if (x != c(0,0,0,0) | x!= c(0,0,0,0,0)){
+    if (x != c(0,0,0,0) || x!= c(0,0,0,0,0)){
       params<- x
     } else{
       params<- init$par
@@ -415,8 +415,13 @@ shinyServer(
           filtered<- dlmFilter(data, dlm())
           smooth<- dlmSmooth(data, dlm())
           if (input$typeDlm=="Manual"){
-            filt<-dropFirst(filtered$m)
-            smoothed<-dropFirst(smooth$s)
+            if ( input$seasType=='No seasonality'){
+              filt<-dropFirst(filtered$m)
+              smoothed<-dropFirst(smooth$s)
+            } else {
+              filt<-dropFirst(filtered$m[,1])
+              smoothed<-dropFirst(smooth$s[,1]) 
+            }
           } else {
             x<- data1[, input$explainDlm]
             filt<- filtered$m[-1,1]+ x* filtered$m[-1,2]
