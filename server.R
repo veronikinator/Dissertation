@@ -313,7 +313,7 @@ shinyServer(
       req(inFile)
       table<-read.csv(inFile$datapath)
       
-      dat<-table[, input$paramsState]
+      dat<-table[, input$paramsMARSS]
       
       dat<-sapply(dat, as.numeric)
       dat<-as.matrix(dat)
@@ -327,6 +327,19 @@ shinyServer(
       mars<-MARSS(dat)
       mars
     })
+  
+  marssSmooth<- reactive({
+    model<-marss()
+    s<-MARSSkfss(model)$xtT
+    s
+  })
+  
+  marssKalman<- reactive({
+    model<-marss()
+    k<-MARSSkfss(model)$xtt
+    k
+    })
+  
     
     observeEvent(input$analyseState,{
       
@@ -432,7 +445,7 @@ shinyServer(
           lines(smoothed,lty = "dotted", lwd = 2, col="blue")
           legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
           
-        } else {
+        } else if (input$StateModel=="Structural"){
           data<-state()
           data1<- data()
           data1<-data1[, input$paramsState]
@@ -441,6 +454,13 @@ shinyServer(
           lines(fitted(data)[,1],lty = "dashed", lwd = 2, col="red")
           lines(tsSmooth(data)[,1],lty = "dotted", lwd = 2, col="blue")
           legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
+        } else {
+          data<-marss()
+          data1<- MARSSHandler()
+          
+          plot(data1[1,], type="o", pch=19, bg="black")
+          lines(marssKalman()[1,],lty = "dashed", lwd = 2, col="red")
+          lines(marssSmooth()[1,],lty = "dotted", lwd = 2, col="blue")
         }
         })
       
