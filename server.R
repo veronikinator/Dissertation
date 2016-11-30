@@ -339,6 +339,7 @@ shinyServer(
     k<-MARSSkfss(model)$xtt
     k
     })
+
   
     
     observeEvent(input$analyseState,{
@@ -395,6 +396,9 @@ shinyServer(
           data<- filterDlm()
           f<- dlmForecast(data, nAhead = input$statePeriod, sampleNew=input$statePeriod)
           
+        } else {
+          model<- marss()
+          f<-MARSSsimulate(model, tSteps = input$statePeriod, nsim = 1, silent = TRUE, miss.loc = NULL)
         }
         f
         
@@ -406,6 +410,15 @@ shinyServer(
         if (input$StateModel=="Structural"){
           table<- data.frame(stateForecast())
           colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95") 
+        } else if (input$StateModel=="Autoregressive"){
+          f<-stateForecast()
+          forec<-data.frame(f$sim.data)
+          forec2<-data.frame(f$sim.states)
+          a<-data.frame(t(forec))
+          b<-data.frame(t(forec2))
+          table<- data.frame(a,b)
+          colnames(table)<-c(rep("Forecast obs", length(input$paramsMARSS)), rep("State obs", length(input$paramsMARSS)))
+          
         } else {
           data<-stateForecast()
           table<-data.frame(unlist(data$f), data$newObs)
