@@ -210,6 +210,17 @@ shinyServer(
     return(rw)
   }
   
+  buildDlmSeas<- reactive({
+    if (input$seasType==1){
+      dlmModSeas()
+    } else if (input$seasType==2){
+      dlmModTrig(q=input$trigHarmonics, tau=input$trigPeriod, dV=input$trigVarNoise ,dW=input$trigVarSys)
+    }else {
+      NULL
+    }
+  })
+  
+  
   
   #____________Calculating startign values for the optim in dlm()
   initGuessParams<- reactive({
@@ -264,7 +275,9 @@ shinyServer(
     if (input$typeDlm=="Time-varying coefficients"){
       dlm<- buildModRegVariant(params)
     } else if (input$typeDlm=="Manual"){
-      dlm<- buildDlm(params)
+      
+      dlm<- buildDlmPoly(params) + buildDlmSeas()
+   
     } else {
       dlm<-buildModRegConst(params)
     }
@@ -281,12 +294,6 @@ shinyServer(
     smooth<-dlmSmooth(data, model)
     smooth
   })
-  
-  
-  output$smother<-renderPrint({
-    filterDlm()
-  })
-  
   
   
   #___________Kalman Filtering for the dlm model

@@ -71,15 +71,24 @@ shinyUI(
                                   ),
                  conditionalPanel("input.StateModel=='dlm'",
                                   #selectInput("typeDlm", "Model type:", choices = c("Polynomial", "Regression")),
-                                  selectInput("typeDlm", "Model type:", choices = c("Manual","Constant Coefficients", "Time-varying coefficients")),
+                                  selectInput("typeDlm", "Model type:", choices = c("Manual", "Constant Coefficients", "Time-varying coefficients")),
                                   selectInput("paramsDlm", "Choose columns", choices = NULL),
                                   conditionalPanel("input.typeDlm!='Manual'",
                                                    selectInput("explainDlm", "Choose explanatory variable", choices = NULL)),
                                   textInput("dlmParams", "Choose parameters for the model:", "0,0,0,0"),
                                   conditionalPanel("input.typeDlm=='Manual",
                                                    numericInput("dlmM0", "M0:", 0),
-                                                   numericInput("dlmPolyOrder", "Polynomial order:", 1))
-                                  
+                                                   numericInput("dlmPolyOrder", "Polynomial order:", 1),
+                                                   radioButtons("seasType", label = "Type of seasonal model",
+                                                                choices = list("Seasonal" = 1, "Fourier form" = 2, "No seasonality"=3), 
+                                                                selected = 3),
+                                                   conditionalPanel("input.seasType==2",
+                                                                    numericInput("trigHarmonics", "Number of harmonics:", 1),
+                                                                    numericInput("trigPeriod", "Period:", 1),
+                                                                    numericInput("trigVarNoise", "Variance of observation noise:", 1),
+                                                                    numericInput("trigVarSys", "Variance of system noise:", 0)
+                                                                    ))
+                                
                  ),
                  actionButton("analyseState", label = "Analyse"),
                  conditionalPanel("input.analyseState > 0",
