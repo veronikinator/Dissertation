@@ -339,6 +339,16 @@ shinyServer(
     k<-MARSSkfss(model)$xtt
     k
     })
+  
+  marssForecast<- reactive({
+    f<-stateForecast()
+    forec<-data.frame(f$sim.data)
+    forec2<-data.frame(f$sim.states)
+    a<-data.frame(t(forec))
+    b<-data.frame(t(forec2))
+    table<- data.frame(a,b)
+    table
+  })
 
   
     
@@ -381,8 +391,10 @@ shinyServer(
         
         if ( input$StateModel=='Structural'){
           tsdiag(modelState())
-        } else{
+        } else if (input$StateModel=='dlm'){
           tsdiag(filterDlm())
+        } else {
+          NULL
         }
       })
       
@@ -398,7 +410,8 @@ shinyServer(
           
         } else {
           model<- marss()
-          f<-MARSSsimulate(model, tSteps = input$statePeriod, nsim = 1, silent = TRUE, miss.loc = NULL)
+          data<- MARSSHandler()[1,]
+          f<-MARSSsimulate(model, tSteps = input$statePeriod +length(data), nsim = 1, silent = TRUE, miss.loc = NULL)
         }
         f
         
@@ -489,6 +502,18 @@ shinyServer(
                                                               type = 'o', pch = 4)))
           abline(v = length(data)+0.5, lty = "dashed")
 
+          
+        } else if (input$StateModel=="Autoregressive"){
+          
+          data<- MARSSHandler()[1,]
+          f<-stateForecast()
+          a<-data.frame(f$sim.data)
+          forecast<-t(a)
+          plot(forecast[,1], type = 'o', lwd = 2, pch = 16, ylab = "Data")
+          lines(data,type = 'o')
+          #abline(v = length(data)+0.5, lty = "dashed")
+          
+          
           
         } else {
           plot(stateForecast()) 
