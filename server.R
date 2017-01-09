@@ -247,7 +247,7 @@ shinyServer(
   #__________Constructing a dlm model with the paramteres
   dlm<-reactive({
     
-    x<-input$dlmParams
+    #x<-input$dlmParams
     dv<-as.numeric(input$dlmParamsDv)
     dw<- input$dlmParamsDw
     dw<-as.numeric(unlist(strsplit(dw, ",")))
@@ -255,7 +255,7 @@ shinyServer(
     m0<-as.numeric(unlist(strsplit(m0, ",")))
     c0<-input$dlmParamsC0
     c0<-as.numeric(unlist(strsplit(c0, ",")))
-    x<-as.numeric(unlist(strsplit(x, ",")))
+    #x<-as.numeric(unlist(strsplit(x, ",")))
     
     #init<-initGuessParams()
     
@@ -447,15 +447,19 @@ shinyServer(
         
       }
       
+      output$filter<-renderPrint({
+        print(filterDlm())
+      })
+      
       output$stateFittedPlot<- renderPlot({
         
         if (input$StateModel=="dlm"){
           data1<- data()
           data<-data1[, input$paramsDlm]
-          filtered<- dlmFilter(data, dlm())
-          smooth<- dlmSmooth(data, dlm())
+          filtered<-filterDlm()
+          smooth<-smoothDlm()
           if (input$typeDlm=="Manual"){
-            if ( input$seasType=='No seasonality'){
+            if ( input$seasType=='No seasonality' && input$dlmPolyOrder==1){
               filt<-dropFirst(filtered$m)
               smoothed<-dropFirst(smooth$s)
             } else {

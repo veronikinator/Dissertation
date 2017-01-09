@@ -106,6 +106,7 @@ shinyUI(
                                   tags$div(class="box", textOutput("consoleState")))
                  ),
              mainPanel(
+               textOutput("filter"),
                plotOutput("stateFittedPlot"),
                DT::dataTableOutput('stateForecast'),
                plotOutput("stateForecastPlot"),
