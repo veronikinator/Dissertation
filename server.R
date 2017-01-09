@@ -442,56 +442,45 @@ shinyServer(
         
       })
       
-      
-      sortDlmForecast<- function(x){
-        
-      }
-      
       output$filter<-renderPrint({
         print(filterDlm())
+      })
+      
+      
+      structuralPlot<- reactive({
+        data<-state()
+        data1<- data()
+        data1<-data1[, input$paramsState]
+        
+        plot(data1, type="o", pch=19, bg="black")
+        lines(fitted(data)[,1],lty = "dashed", lwd = 2, col="red")
+        lines(tsSmooth(data)[,1],lty = "dotted", lwd = 2, col="blue")
+        legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
+        
+      })
+      
+      marssPlot<-reactive({
+        data<-marss()
+        data1<- MARSSHandler()
+        
+        plot(data1[1,], type="o", pch=19, bg="black")
+        lines(marssKalman()[1,],lty = "dashed", lwd = 2, col="red")
+        lines(marssSmooth()[1,],lty = "dotted", lwd = 2, col="blue")
       })
       
       output$stateFittedPlot<- renderPlot({
         
         if (input$StateModel=="dlm"){
-          data1<- data()
-          data<-data1[, input$paramsDlm]
-          filtered<-filterDlm()
-          smooth<-smoothDlm()
-          if (input$typeDlm=="Manual"){
-            if ( input$seasType=='No seasonality' && input$dlmPolyOrder==1){
-              filt<-dropFirst(filtered$m)
-              smoothed<-dropFirst(smooth$s)
-            } else {
-              filt<-dropFirst(filtered$m[,1])
-              smoothed<-dropFirst(smooth$s[,1]) 
-            }
-          } else {
-            x<- data1[, input$explainDlm]
-            filt<- filtered$m[-1,1]+ x* filtered$m[-1,2]
-            smoothed<- smooth$s[-1,1]+ x* smooth$s[-1,2]
-          }
-          plot(data, type="o", pch=19, bg="black")
-          lines(filt ,lty = "dashed", lwd = 2, col="red")
-          lines(smoothed,lty = "dotted", lwd = 2, col="blue")
-          legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
           
-        } else if (input$StateModel=="Structural"){
-          data<-state()
-          data1<- data()
-          data1<-data1[, input$paramsState]
+          dlmPlot()
           
-          plot(data1, type="o", pch=19, bg="black")
-          lines(fitted(data)[,1],lty = "dashed", lwd = 2, col="red")
-          lines(tsSmooth(data)[,1],lty = "dotted", lwd = 2, col="blue")
-          legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
-        } else {
-          data<-marss()
-          data1<- MARSSHandler()
-          
-          plot(data1[1,], type="o", pch=19, bg="black")
-          lines(marssKalman()[1,],lty = "dashed", lwd = 2, col="red")
-          lines(marssSmooth()[1,],lty = "dotted", lwd = 2, col="blue")
+         } else if (input$StateModel=="Structural"){
+           
+           structuralPlot()
+           
+         } else {
+           
+           marssPlot()
         }
         })
       
