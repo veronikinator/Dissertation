@@ -49,12 +49,6 @@ shinyServer(
     ####################### Arima ###############################
     
     
-    #_________Reading the user input__________
-    xreg<- reactive({
-      input$xregParamsArimax
-    })
-
-    
     #________Fitting an Arima model ______________
     arimaFit<-reactive({
       
@@ -142,16 +136,6 @@ shinyServer(
     })
     
     
-    #_____________Creating conditional panel_________
-
-    
-  #  output$fileUploaded <- reactive({
-     # return(!is.null(data()))
-    #})
-    
-    #outputOptions(output, 'fileUploaded', suspendWhenHidden=FALSE)
-    
-    
     #_______________Warnings handler_________________
     
     output$warn <- reactive({
@@ -206,7 +190,13 @@ shinyServer(
   
   buildDlmPoly<- function(x){
     n<- input$dlmPolyOrder
-    rw <- rw <- dlmModPoly(n, dV=x[1], dW=x[2], C0=x[3], m0=x[4])
+    rw <- dlmModPoly(n, dV=x[1], dW=c(rep(x[2], n - 1), 1), C0=x[3]*diag(nrow = n), m0=rep(x[4], n))
+    return(rw)
+  }
+  
+  buildDlmPoly1<- function(dv, dw, c0, m0){
+    n<- input$dlmPolyOrder
+    rw <- dlmModPoly(n, dV=dv, dW=dw, C0 = c0*diag(nrow = n), m0=m0)
     return(rw)
   }
   
@@ -233,7 +223,7 @@ shinyServer(
       mle<- dlmMLE(data, parm = params, build = buildModRegVariant,  method = "Nelder-Mead") 
     } else if (input$typeDlm=="Manual"){
       params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
-      mle<- dlmMLE(data, parm = params, build = buildDlmPoly,  method = "Nelder-Mead")
+      mle<- dlmMLE(data, parm = params, build = buildDlmPoly1,  method = "Nelder-Mead")
     } else {
       params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
       mle<- dlmMLE(data, parm = params, build = buildModRegConst,  method = "Nelder-Mead")
@@ -258,23 +248,34 @@ shinyServer(
   dlm<-reactive({
     
     x<-input$dlmParams
+    dv<-as.numeric(input$dlmParamsDv)
+    dw<- input$dlmParamsDw
+    dw<-as.numeric(unlist(strsplit(dw, ",")))
+    m0<-input$dlmParamsM0
+    m0<-as.numeric(unlist(strsplit(m0, ",")))
+    c0<-input$dlmParamsC0
+    c0<-as.numeric(unlist(strsplit(c0, ",")))
     x<-as.numeric(unlist(strsplit(x, ",")))
     
-    init<-initGuessParams()
-    if (x != c(0,0,0,0) || x!= c(0,0,0,0,0)){
-      params<- x
-    } else{
-      params<- init$par
-    }
+    #init<-initGuessParams()
+    
+    
+    #if (x != c(0,0,0,0) || x!= c(0,0,0,0,0)){
+  #    params<- x
+#    } else{
+ #     params<- init$par
+  #  }
     
     if (input$typeDlm=="Time-varying coefficients"){
       dlm<- buildModRegVariant(params)
     } else if (input$typeDlm=="Manual"){
       
       if (input$seasType=="No seasonality"){
-        dlm<- buildDlmPoly(params)
+        #dlm<- buildDlmPoly(params)
+        dlm<- buildDlmPoly1(dv= dv,dw= dw, c0=c0, m0=m0)
       } else {
-        dlm<- buildDlmPoly(params) + buildDlmSeas() 
+        #dlm<- buildDlmPoly(params) + buildDlmSeas() 
+        dlm<- buildDlmPoly1(dv= dv,dw= dw, c0=c0, m0=m0) + buildDlmSeas() 
       }
    
     } else {
