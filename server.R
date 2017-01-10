@@ -97,7 +97,9 @@ shinyServer(
     })
     
     
-    
+    xreg<- reactive({
+      input$xregParamsArimax
+    })
     
     #______Construction forecast output_________
     
@@ -442,10 +444,40 @@ shinyServer(
         
       })
       
+      
+      sortDlmForecast<- function(x){
+        
+      }
+      
       output$filter<-renderPrint({
         print(filterDlm())
       })
       
+      dlmPlot<- reactive({
+        
+        data1<- data()
+        data<-data1[, input$paramsDlm]
+        filtered<-filterDlm()
+        smooth<-smoothDlm()
+        if (input$typeDlm=="Manual"){
+          if ( input$seasType=='No seasonality' && input$dlmPolyOrder==1){
+            filt<-dropFirst(filtered$m)
+            smoothed<-dropFirst(smooth$s)
+          } else {
+            filt<-dropFirst(filtered$m[,1])
+            smoothed<-dropFirst(smooth$s[,1]) 
+          }
+        } else {
+          x<- data1[, input$explainDlm]
+          filt<- filtered$m[-1,1]+ x* filtered$m[-1,2]
+          smoothed<- smooth$s[-1,1]+ x* smooth$s[-1,2]
+        }
+        plot(data, type="o", pch=19, bg="black")
+        lines(filt ,lty = "dashed", lwd = 2, col="red")
+        lines(smoothed,lty = "dotted", lwd = 2, col="blue")
+        legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
+        
+      })
       
       structuralPlot<- reactive({
         data<-state()
@@ -460,12 +492,14 @@ shinyServer(
       })
       
       marssPlot<-reactive({
+        
         data<-marss()
         data1<- MARSSHandler()
         
         plot(data1[1,], type="o", pch=19, bg="black")
         lines(marssKalman()[1,],lty = "dashed", lwd = 2, col="red")
         lines(marssSmooth()[1,],lty = "dotted", lwd = 2, col="blue")
+        
       })
       
       output$stateFittedPlot<- renderPlot({
@@ -479,35 +513,47 @@ shinyServer(
            structuralPlot()
            
          } else {
-           
            marssPlot()
         }
         })
       
+      
+      dlmForecastPlot<- reactive({
+        
+        data1<- data()
+        data<-data1[, input$paramsDlm]
+        forecast<-stateForecast()
+        plot(c(rep(NA, length(data)),forecast$f), type = 'o', lwd = 2, pch = 16, ylab = "Data")
+        lines(data,type = 'o')
+        invisible(lapply(forecast$newObs, function(x) lines(c(rep(NA,length(data)),x), col = "darkgrey",
+                                                            type = 'o', pch = 4)))
+        abline(v = length(data)+0.5, lty = "dashed")
+        
+      })
+      
+      
+      marssForecastPlot<-reactive({
+        
+        data<- MARSSHandler()[1,]
+        f<-stateForecast()
+        a<-data.frame(f$sim.data)
+        forecast<-t(a)
+        plot(forecast[,1], type = 'o', lwd = 2, pch = 16, ylab = "Data")
+        lines(data,type = 'o')
+        #abline(v = length(data)+0.5, lty = "dashed")
+        
+      })
+      
       output$stateForecastPlot<-renderPlot({
         
         if (input$StateModel=="dlm"){
-          data1<- data()
-          data<-data1[, input$paramsDlm]
-          forecast<-stateForecast()
-          plot(c(rep(NA, length(data)),forecast$f), type = 'o', lwd = 2, pch = 16, ylab = "Data")
-          lines(data,type = 'o')
-          invisible(lapply(forecast$newObs, function(x) lines(c(rep(NA,length(data)),x), col = "darkgrey",
-                                                              type = 'o', pch = 4)))
-          abline(v = length(data)+0.5, lty = "dashed")
+          
+          dlmForecastPlot()
 
           
         } else if (input$StateModel=="Autoregressive"){
           
-          data<- MARSSHandler()[1,]
-          f<-stateForecast()
-          a<-data.frame(f$sim.data)
-          forecast<-t(a)
-          plot(forecast[,1], type = 'o', lwd = 2, pch = 16, ylab = "Data")
-          lines(data,type = 'o')
-          #abline(v = length(data)+0.5, lty = "dashed")
-          
-          
+          marssForecastPlot()
           
         } else {
           plot(stateForecast()) 
