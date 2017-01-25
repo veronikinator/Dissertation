@@ -75,7 +75,6 @@ shinyUI(
                                   selectInput("paramsDlm", "Choose columns", choices = NULL),
                                   conditionalPanel("input.typeDlm!='Manual'",
                                                    selectInput("explainDlm", "Choose explanatory variable", choices = NULL)),
-                                  textInput("dlmParams", "Choose parameters for the model:", "0,0,0,0"),
                                   textInput("dlmParamsDv", "Choose variance of the observation noise, dV:", "0"),
                                   textInput("dlmParamsDw", "Choose variance of the observation noise, dW:", "0"),
                                   textInput("dlmParamsM0", "Choose expected value of the pre-sample state vector, m0:", "0"),
@@ -106,7 +105,7 @@ shinyUI(
                                   tags$div(class="box", textOutput("consoleState")))
                  ),
              mainPanel(
-               textOutput("filter"),
+               #textOutput("filter"),
                plotOutput("stateFittedPlot"),
                DT::dataTableOutput('stateForecast'),
                plotOutput("stateForecastPlot"),

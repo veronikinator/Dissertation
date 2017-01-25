@@ -235,15 +235,7 @@ shinyServer(
   })
   
   
-  #___________Updating a size of input in the ui depending on the type of space-state model 
-  observe({
-    if (input$typeDlm=="Time-varying coefficients"){
-      updateTextInput(session, "dlmParams", "Choose parameters for the model:", "0,0,0,0,0")
-    } else {
-      updateTextInput(session, "dlmParams", "Choose parameters for the model:", "0,0,0,0")
-    }
-    
-  })
+ 
   
   
   #__________Constructing a dlm model with the paramteres
@@ -398,6 +390,18 @@ shinyServer(
           tsdiag(filterDlm())
         } else {
           NULL
+        }
+      })
+      
+      
+      dlmPredict<- reactive({
+        
+        data<- filterDlm()
+        
+        if (input$typeDlm=='Manual'){
+          dlmForecast(data, nAhead = input$statePeriod, sampleNew=input$statePeriod)
+        } else {
+          
         }
       })
       
