@@ -35,6 +35,7 @@ shinyServer(
       updateSelectInput(session, "paramsArima", "Select data:", choices = vars)
       updateCheckboxGroupInput(session, inputId="xregParamsArimax", choices = vars, selected=NULL)
       updateCheckboxGroupInput(session, inputId="paramsMARSS", choices = vars, selected=vars[1])
+      updateCheckboxGroupInput(session, inputId="paramsData", choices = vars, selected=vars)
       table
     })
     
@@ -42,7 +43,16 @@ shinyServer(
 
     
     output$contents <- DT::renderDataTable({  
-      DT::datatable(data())
+      DT::datatable(updatedData())
+    })
+    
+    updatedData<- reactive({
+      data()[,input$paramsData]
+    })
+    
+    output$dataPlot<- renderDygraph({
+      dygraph(updatedData()) %>%
+        dyRangeSelector()
     })
 
 
@@ -196,9 +206,10 @@ shinyServer(
     return(rw)
   }
   
-  buildDlmPoly1<- function(dv, dw, c0, m0){
-    n<- input$dlmPolyOrder
-    rw <- dlmModPoly(n, dV=dv, dW=dw, C0 = c0*diag(nrow = n), m0=m0)
+  buildDlmPoly1<- function(p){
+    #n <- input$dlmPolyOrder
+    n<- 1
+    rw <- dlmModPoly(n, dV=p[1], dW=p[2], C0 = p[3]*diag(nrow = n), m0=p[4])
     return(rw)
   }
   
@@ -209,6 +220,11 @@ shinyServer(
       dlmModTrig(q=input$trigHarmonics, tau=input$trigPeriod, dV=input$trigVarNoise ,dW=input$trigVarSys)
     }
   })
+  
+  fitDlmPoly<- function(p, data){
+    mod<- dlmMLE(data, parm = p, build = buildDlmPoly1 )
+    return(mod)
+  }
   
   
   
@@ -235,7 +251,9 @@ shinyServer(
   })
   
   
- 
+ buildDlmMannual<- function(params){
+   
+ }
   
   
   #__________Constructing a dlm model with the paramteres
@@ -251,7 +269,11 @@ shinyServer(
     c0<-as.numeric(unlist(strsplit(c0, ",")))
     #x<-as.numeric(unlist(strsplit(x, ",")))
     
-    #init<-initGuessParams()
+    init<-initGuessParams()
+    inFile<- data()
+    data<-inFile[, input$paramsDlm]
+    p<- c(dv,dw, c0, m0)
+    
     
     
     #if (x != c(0,0,0,0) || x!= c(0,0,0,0,0)){
@@ -266,10 +288,13 @@ shinyServer(
       
       if (input$seasType=="No seasonality"){
         #dlm<- buildDlmPoly(params)
-        dlm<- buildDlmPoly1(dv= dv,dw= dw, c0=c0, m0=m0)
+       # dlm<- buildDlmPoly1(n=n, dv= dv,dw= dw, c0=c0, m0=m0)
+        pars<- fitDlmPoly(p, data)
+        dlm<- buildDlmPoly1(pars$par)
       } else {
         #dlm<- buildDlmPoly(params) + buildDlmSeas() 
-        dlm<- buildDlmPoly1(dv= dv,dw= dw, c0=c0, m0=m0) + buildDlmSeas() 
+        #dlm<- buildDlmPoly1(n = n, dv= dv,dw= dw, c0=c0, m0=m0) + buildDlmSeas() 
+        dlm<- fitDlmPoly(p, data) + buildDlmSeas() 
       }
    
     } else {
@@ -399,7 +424,14 @@ shinyServer(
         data<- filterDlm()
         
         if (input$typeDlm=='Manual'){
-          dlmForecast(data, nAhead = input$statePeriod, sampleNew=input$statePeriod)
+          fore<- dlmForecast(data, nAhead = input$statePeriod, sampleNew=100)
+          ciTheory20 <- (outer(sapply(fore$Q, FUN=function(x) sqrt(diag(x))), qnorm(c(0.2,0.8))) +
+                         as.vector(t(fore$f)))
+          ciTheory5 <- (outer(sapply(fore$Q, FUN=function(x) sqrt(diag(x))), qnorm(c(0.05,0.95))) +
+                           as.vector(t(fore$f)))
+          Forecast<-cbind(fore$f[,1], ciTheory20, ciTheory5)
+          Forecast
+
         } else {
           
         }
@@ -412,8 +444,13 @@ shinyServer(
           data<-state()
            f<-forecast(data, h= input$statePeriod)
         } else if (input$StateModel=="dlm"){
-          data<- filterDlm()
-          f<- dlmForecast(data, nAhead = input$statePeriod, sampleNew=input$statePeriod)
+          model<- dlm()
+          fore<- dlmForecast(model, nAhead = input$statePeriod, sampleNew=100)
+          ciTheory20 <- (outer(sapply(fore$Q, FUN=function(x) sqrt(diag(x))), qnorm(c(0.2,0.8))) +
+                           as.vector(t(fore$f)))
+          ciTheory5 <- (outer(sapply(fore$Q, FUN=function(x) sqrt(diag(x))), qnorm(c(0.05,0.95))) +
+                          as.vector(t(fore$f)))
+          f<-data.frame(fore$f[,1], ciTheory20, ciTheory5)
           
         } else {
           model<- marss()
@@ -441,8 +478,8 @@ shinyServer(
           
         } else {
           data<-stateForecast()
-          table<-data.frame(unlist(data$f), data$newObs)
-          colnames(table)<-rep("Forecast obs", input$statePeriod+1)  
+          table<-data.frame(data)
+          colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95") 
         }
         DT::datatable(table)
         
@@ -476,6 +513,7 @@ shinyServer(
           filt<- filtered$m[-1,1]+ x* filtered$m[-1,2]
           smoothed<- smooth$s[-1,1]+ x* smooth$s[-1,2]
         }
+        #ggplot(data, aes(data[1,], data[2,]))
         plot(data, type="o", pch=19, bg="black")
         lines(filt ,lty = "dashed", lwd = 2, col="red")
         lines(smoothed,lty = "dotted", lwd = 2, col="blue")

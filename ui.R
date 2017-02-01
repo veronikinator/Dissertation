@@ -27,11 +27,12 @@ shinyUI(
                                                               'text/plain',
                                                               '.csv',
                                                               '.tsv')
-                    )
+                    ),
+          checkboxGroupInput("paramsData", "Choose columns", choices = NULL)
         ),
       mainPanel(
         DT::dataTableOutput('contents'),
-        plotOutput("dataPlot")
+        dygraphOutput("dataPlot")
       )
     ),
     tabPanel("Arima",
