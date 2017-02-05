@@ -444,7 +444,8 @@ shinyServer(
           data<-state()
            f<-forecast(data, h= input$statePeriod)
         } else if (input$StateModel=="dlm"){
-          model<- dlm()
+          #model<- dlm()
+          model<- filterDlm()
           fore<- dlmForecast(model, nAhead = input$statePeriod, sampleNew=100)
           ciTheory20 <- (outer(sapply(fore$Q, FUN=function(x) sqrt(diag(x))), qnorm(c(0.2,0.8))) +
                            as.vector(t(fore$f)))
@@ -564,11 +565,21 @@ shinyServer(
         
         data1<- data()
         data<-data1[, input$paramsDlm]
-        forecast<-stateForecast()
-        plot(c(rep(NA, length(data)),forecast$f), type = 'o', lwd = 2, pch = 16, ylab = "Data")
-        lines(data,type = 'o')
-        invisible(lapply(forecast$newObs, function(x) lines(c(rep(NA,length(data)),x), col = "darkgrey",
-                                                            type = 'o', pch = 4)))
+        fore<-stateForecast()
+        fore<-data.frame(fore)
+        #plot.ts(cbind(ciTheory20, ciTheory5, fore$f[,1]),plot.type="s", col=c("red","red", "blue", "blue","green"),ylab="y")
+        #for (j in 1:2) lines(ciSample20[,j], col="black")
+        #for (j in 1:2) lines(ciSample5[,j], col="black")
+        #legend(2,-40,legend=c("forecast mean", "theoretical bounds", "Monte Carlo bounds"),
+         #      col=c("green","red","blue"), lty=1, bty="n")
+        plot.ts(c(data, rep(NA, input$statePeriod)))
+        lines(c(rep(NA, length(data)), fore[,1]), col = "green")
+        lines(c(rep(NA, length(data)), fore[,2]), col = "blue")
+        lines(c(rep(NA, length(data)), fore[,3]), col = "blue")
+        #plot.ts(c(rep(NA, length(data)),fore[,2]), type = 'o', lwd = 2, pch = 16, ylab = "Data")
+        #lines(data,type = 'o')
+        #invisible(lapply(forecast$newObs, function(x) lines(c(rep(NA,length(data)),x), col = "darkgrey",
+                    #                                        type = 'o', pch = 4)))
         abline(v = length(data)+0.5, lty = "dashed")
         
       })
