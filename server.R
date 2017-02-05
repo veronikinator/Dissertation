@@ -208,8 +208,8 @@ shinyServer(
   
   buildDlmPoly1<- function(p){
     #n <- input$dlmPolyOrder
-    n<- 1
-    rw <- dlmModPoly(n, dV=p[1], dW=p[2], C0 = p[3]*diag(nrow = n), m0=p[4])
+    n<- input$dlmPolyOrder
+    rw <- dlmModPoly(n, dV=p[1], dW=c(rep(p[2], n - 1), 1), C0 = p[3]*diag(nrow = n), rep(p[4], n))
     return(rw)
   }
   
