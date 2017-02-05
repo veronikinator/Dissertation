@@ -200,13 +200,13 @@ shinyServer(
   
   #_________Constructing manual dlm_________________
   
-  buildDlmPoly<- function(x){
-    n<- input$dlmPolyOrder
-    rw <- dlmModPoly(n, dV=x[1], dW=c(rep(x[2], n - 1), 1), C0=x[3]*diag(nrow = n), m0=rep(x[4], n))
-    return(rw)
-  }
+  #buildDlmPoly<- function(x){
+   # n<- input$dlmPolyOrder
+   # rw <- dlmModPoly(n, dV=x[1], dW=c(rep(x[2], n - 1), 1), C0=x[3]*diag(nrow = n), m0=rep(x[4], n))
+   # return(rw)
+ # }
   
-  buildDlmPoly1<- function(p){
+  buildDlmPoly<- function(p){
     #n <- input$dlmPolyOrder
     n<- input$dlmPolyOrder
     rw <- dlmModPoly(n, dV=p[1], dW=c(rep(p[2], n - 1), 1), C0 = p[3]*diag(nrow = n), rep(p[4], n))
@@ -222,7 +222,7 @@ shinyServer(
   })
   
   fitDlmPoly<- function(p, data){
-    mod<- dlmMLE(data, parm = p, build = buildDlmPoly1 )
+    mod<- dlmMLE(data, parm = p, build = buildDlmPoly )
     return(mod)
   }
   
@@ -241,7 +241,7 @@ shinyServer(
       mle<- dlmMLE(data, parm = params, build = buildModRegVariant,  method = "Nelder-Mead") 
     } else if (input$typeDlm=="Manual"){
       params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
-      mle<- dlmMLE(data, parm = params, build = buildDlmPoly1,  method = "Nelder-Mead")
+      mle<- dlmMLE(data, parm = params, build = buildDlmPoly,  method = "Nelder-Mead")
     } else {
       params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
       mle<- dlmMLE(data, parm = params, build = buildModRegConst,  method = "Nelder-Mead")
@@ -290,7 +290,7 @@ shinyServer(
         #dlm<- buildDlmPoly(params)
        # dlm<- buildDlmPoly1(n=n, dv= dv,dw= dw, c0=c0, m0=m0)
         pars<- fitDlmPoly(p, data)
-        dlm<- buildDlmPoly1(pars$par)
+        dlm<- buildDlmPoly(pars$par)
       } else {
         #dlm<- buildDlmPoly(params) + buildDlmSeas() 
         #dlm<- buildDlmPoly1(n = n, dv= dv,dw= dw, c0=c0, m0=m0) + buildDlmSeas() 
