@@ -157,7 +157,7 @@ shinyServer(
     outputOptions(output, 'warn', suspendWhenHidden=FALSE)
 
     
-  #__________ Space-State modeling
+  ##################################Space-State modeling#########################
   
   state<-reactive({
     
@@ -561,26 +561,35 @@ shinyServer(
         })
       
       
-      dlmForecastPlot<- reactive({
+      #Function creating a data.frame in the form required by ggplot in dlmForecastPlot()
+      
+      stateForecastPlotDataHandler<- reactive({
         
         data1<- data()
-        data<-data1[, input$paramsDlm]
+        data<-data.frame(data1[, input$paramsDlm])
+        colnames(data)<- c("data")
+        data$x<- c(1:length(data$data))
         fore<-stateForecast()
         fore<-data.frame(fore)
-        #plot.ts(cbind(ciTheory20, ciTheory5, fore$f[,1]),plot.type="s", col=c("red","red", "blue", "blue","green"),ylab="y")
-        #for (j in 1:2) lines(ciSample20[,j], col="black")
-        #for (j in 1:2) lines(ciSample5[,j], col="black")
-        #legend(2,-40,legend=c("forecast mean", "theoretical bounds", "Monte Carlo bounds"),
-         #      col=c("green","red","blue"), lty=1, bty="n")
-        plot.ts(c(data, rep(NA, input$statePeriod)))
-        lines(c(rep(NA, length(data)), fore[,1]), col = "green")
-        lines(c(rep(NA, length(data)), fore[,2]), col = "blue")
-        lines(c(rep(NA, length(data)), fore[,3]), col = "blue")
-        #plot.ts(c(rep(NA, length(data)),fore[,2]), type = 'o', lwd = 2, pch = 16, ylab = "Data")
-        #lines(data,type = 'o')
-        #invisible(lapply(forecast$newObs, function(x) lines(c(rep(NA,length(data)),x), col = "darkgrey",
-                    #                                        type = 'o', pch = 4)))
-        abline(v = length(data)+0.5, lty = "dashed")
+        colnames(fore)<-c("mean","min80", "max80", "min95", "max95")
+        m1<- length(data$x)+1
+        m2<- length(data$x)+ length(fore$mean)
+        fore$x<-c(m1:m2)
+        f<-full_join(data, fore, by = "x")
+        f
+        
+      })
+      
+      
+      #ggplot functionality like in arime.plot()
+      
+      dlmForecastPlot<- reactive({
+        
+        f<- stateForecastPlotDataHandler()
+        g<- ggplot(f, aes(x=x, y=data)) + geom_line() + geom_line(aes(x=x, y=mean), colour = "blue")
+        g<- g + geom_ribbon(aes(x=x, ymin=min80, ymax=max80),  fill = "lightsteelblue4",  alpha=0.3)
+        g<- g + geom_ribbon(aes(x=x, ymin=min95, ymax=max95),  fill = "grey50",  alpha=0.3)
+        g
         
       })
       
@@ -596,6 +605,8 @@ shinyServer(
         #abline(v = length(data)+0.5, lty = "dashed")
         
       })
+      
+    
       
       output$stateForecastPlot<-renderPlot({
         
