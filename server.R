@@ -517,7 +517,6 @@ shinyServer(
           filt<- filtered$m[-1,1]+ x* filtered$m[-1,2]
           smoothed<- smooth$s[-1,1]+ x* smooth$s[-1,2]
         }
-        #ggplot(data, aes(data[1,], data[2,]))
         plot(data, type="o", pch=19, bg="black")
         lines(filt ,lty = "dashed", lwd = 2, col="red")
         lines(smoothed,lty = "dotted", lwd = 2, col="blue")
