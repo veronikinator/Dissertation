@@ -18,6 +18,7 @@ shinyServer(
     }
     
     
+    
     # _____________________Data table input from the ui_____________________
     
     data<-reactive({
@@ -456,7 +457,8 @@ shinyServer(
         } else {
           model<- marss()
           data<- MARSSHandler()[1,]
-          f<-MARSSsimulate(model, tSteps = input$statePeriod +length(data), nsim = 1, silent = TRUE, miss.loc = NULL)
+          #f<-MARSSsimulate(model, tSteps = input$statePeriod +length(data), nsim = 1, silent = TRUE, miss.loc = NULL)
+          f<-predict(model,n.ahead=input$statePeriod,t.start=length(data)+1)
         }
         f
         
@@ -470,12 +472,13 @@ shinyServer(
           colnames(table)<-c("Forecast", "Low 80", "High 80", "Low 95", "High 95") 
         } else if (input$StateModel=="Autoregressive"){
           f<-stateForecast()
-          forec<-data.frame(f$sim.data)
-          forec2<-data.frame(f$sim.states)
-          a<-data.frame(t(forec))
-          b<-data.frame(t(forec2))
-          table<- data.frame(a,b)
-          colnames(table)<-c(rep("Forecast obs", length(input$paramsMARSS)), rep("State obs", length(input$paramsMARSS)))
+          #forec<-data.frame(f$sim.data)
+          #forec2<-data.frame(f$sim.states)
+          #a<-data.frame(t(forec))
+          #b<-data.frame(t(forec2))
+          a<-t(f$E.y)
+          table<- data.frame(a)
+          #colnames(table)<-c(rep("Forecast obs", length(input$paramsMARSS)), rep("State obs", length(input$paramsMARSS)))
           
         } else {
           data<-stateForecast()
@@ -533,16 +536,32 @@ shinyServer(
         legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
         
       })
+    
       
-      marssPlot<-reactive({
-        
-        data<-marss()
-        data1<- MARSSHandler()
-        
-        plot(data1[1,], type="o", pch=19, bg="black")
-        lines(marssKalman()[1,],lty = "dashed", lwd = 2, col="red")
-        lines(marssSmooth()[1,],lty = "dotted", lwd = 2, col="blue")
-        legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
+      output$MARSSplotData <- renderUI({
+        plot_output_list <- lapply(1:length(input$paramsMARSS), function(i) {
+          plotname <- paste("plot", i, sep="")
+          plotOutput(plotname)
+        })
+        # Convert the list to a tagList - this is necessary for the list of items
+        # to display properly.
+        do.call(tagList, plot_output_list)
+      })
+      
+      observe({ 
+        for (m in 1:length(input$paramsMARSS)) {
+          local({ 
+            i<-m
+            plotname <- paste("plot", i, sep="")
+            output[[plotname]] <- renderPlot({
+              plot(MARSSHandler()[i,], type="o", pch=19, bg="black", main=input$paramsMARSS[i])
+              lines(marssKalman()[i,],lty = "dashed", lwd = 2, col="red")
+              lines(marssSmooth()[i,],lty = "dotted", lwd = 2, col="blue")
+              legend("bottomright", legend = c("Data", "Filtered","Smoothed"), lty = c(1,2,3), pch=c(19, NA, NA), col=c("black", "red", "blue"), lwd=c(1,2,2))
+              
+            })
+          })#endlocal
+        }
         
       })
       

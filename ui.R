@@ -106,8 +106,9 @@ shinyUI(
                                   tags$div(class="box", textOutput("consoleState")))
                  ),
              mainPanel(
-               #textOutput("filter"),
-               plotOutput("stateFittedPlot"),
+               #conditionalPanel("input.StateModel=='Autoregressive'",
+               #                 uiOutput("MARSSplotData")),
+               uiOutput("MARSSplotData"),
                DT::dataTableOutput('stateForecast'),
                plotOutput("stateForecastPlot"),
                plotOutput("stateDiag"))
