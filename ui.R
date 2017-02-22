@@ -52,10 +52,10 @@ shinyUI(
                                   tags$div(class="box", textOutput("console")))
                  ),
              mainPanel(
+               plotOutput("arimaPlot"),
                tags$h4("Forecast Table"),
                DT::dataTableOutput('arimaForecast'),
-               plotOutput("arimaForecastPlot"),
-               plotOutput("arimaPlot")
+               plotOutput("arimaForecastPlot")
                )
       ),
     tabPanel("Space-State",
@@ -111,7 +111,11 @@ shinyUI(
                conditionalPanel("input.StateModel!='Autoregressive'",
                                 plotOutput("stateFittedPlot")),
                DT::dataTableOutput('stateForecast'),
-               plotOutput("stateForecastPlot"),
-               plotOutput("stateDiag"))
+               conditionalPanel("input.StateModel=='Autoregressive'",
+                                uiOutput("MARSSForecastPlot")),
+               conditionalPanel("input.StateModel!='Autoregressive'",
+                                plotOutput("stateForecastPlot"),
+                                plotOutput("stateDiag")
+                                ))
     )
 ))
