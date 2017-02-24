@@ -392,17 +392,18 @@ shinyServer(
     data<-inFile[, input$paramsDlm]
     p<- c(dv,dw, c0, m0)
     if (input$typeDlm=="Time-varying coefficients"){
-      dlm<- buildModRegVariant(params)
+      dlm<- buildModRegVariant(p)
     } else if (input$typeDlm=="Manual"){
       
       if (input$seasType=="No seasonality"){
         pars<- fitDlmPoly(p, data)
         dlm<- buildDlmPoly(pars$par)
       } else {
-        dlm<- fitDlmPoly(p, data) + buildDlmSeas() 
+        pars<- fitDlmPoly(p, data)
+        dlm<-buildDlmPoly(pars$par)+ buildDlmSeas() 
       }
     } else {
-      dlm<-buildModRegConst(params)
+      dlm<-buildModRegConst(p)
     }
     dlm
     
