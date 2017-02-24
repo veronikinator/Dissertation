@@ -115,7 +115,11 @@ shinyServer(
         }
       } else {
         data1<-inFile[, input$paramsAutoArima]
-        model<- auto.arima(data1)
+        if (is.null(xreg())){
+          model<- auto.arima(data1)
+        } else {
+          model<- auto.arima(data1, xreg=inFile[, xreg()])
+        }
       }
       model
     })
