@@ -25,7 +25,7 @@ shinyServer(
     
     
     #' data
-    #' reactive function, updates all the ui components according to the loaded data
+    #' @description reactive function, updates all the ui components according to the loaded data
     #' @param inFile - data loaded into the application 
     #' 
     #'
@@ -52,18 +52,16 @@ shinyServer(
 
     #' output$contents
     #' 
-    #' reactive function
-    #' outputs the data table with updated parameters choice
+    #' @description reactive function, outputs the data table with updated parameters choice
     #' @inherit updatedData()
     #' @examples
     output$contents <- DT::renderDataTable({  
       DT::datatable(updatedData())
     })
     
-    
     #' updatedData
     #'
-    #' updates the data.frame selection according to the user input 
+    #' @description Updates the data.frame selection according to the user input 
     #'
     #' @inherit input$paramsData
     #' @examples
@@ -74,7 +72,7 @@ shinyServer(
     
     #' output$dataPlot
     #'
-    #' Plots all the input data as a Dygraph
+    #' @description Plots all the input data as a Dygraph
     #' @param updatedData()
     #' 
     #' @examples
@@ -89,7 +87,7 @@ shinyServer(
     
     ###################Fitting an Arima model#####################
     #' arimaFit()
-    #' reactive function, fit the given data to an arima model
+    #' @description reactive function, fit the given data to an arima model 
     #' according to the provided parameters
     #' 
     #' @param input$arimaModel, "Manual" or "Auto" 
@@ -128,7 +126,7 @@ shinyServer(
     
     #################### Forecasting the data with Arima###################
     #' arimaForecast()
-    #' a reactive function that forecasts data according to the fitted model
+    #' @description a reactive function that forecasts data according to the fitted model
     #' 
     #' @param arimaFit() model fitted, object of class arima
     #' @param input$arimaPeriod period for prediction, 10 by default 
@@ -150,7 +148,7 @@ shinyServer(
     
     
     #' logTextArima
-    #' function to capture console output in R to display in the UI
+    #' @description function to capture console output in R to display in the UI
     #'
     #' @param arimaFit() 
     #'
@@ -185,7 +183,7 @@ shinyServer(
       
       #' output$arimaForecast
       #'
-      #' reactive function, construct a DT:data table for the UI
+      #' @description reactive function, construct a DT:data table for the UI
       #' @param arimaForecast() - an object of class forecast 
       #' 
       #' @return a DT: data.frame in the UI
@@ -200,7 +198,7 @@ shinyServer(
       
       #' output$arimaPlot
       #'
-      #' a reactive function renders the fitted values plot 
+      #'  @description a reactive function renders the fitted values plot 
       #' 
       #' @examples
       output$arimaPlot<-renderPlot({
@@ -210,7 +208,7 @@ shinyServer(
       
       #' output$arimaForecastPlot
       #'
-      #' a reactive function, renders the forecast plot for arima models
+      #' @description a reactive function, renders the forecast plot for arima models
       #' 
       #' @examples
       output$arimaForecastPlot<-renderPlot({
@@ -232,7 +230,7 @@ shinyServer(
   
     #' state
     #'
-    #' a reactive function, constructs a Structural type of state models 
+    #' @description a reactive function, constructs a Structural type of state models 
     #' 
     #' @examples
   state<-reactive({
@@ -244,11 +242,12 @@ shinyServer(
   
   
   #################### Linear regression space state model with constant coefficients #################
-#' Title
+#' buildModRegConst
+#' @description Fitting function for the manual dlm regression
 #'
-#' @param v 
+#' @param v -  list of initial values for the parameters [dV, dW, m0] 
 #'
-#' @return
+#' @return an object class dlm with estimated parameters
 #' @export
 #'
 #' @examples
@@ -267,11 +266,11 @@ shinyServer(
   
   #_______ Linear regression space state model with time varying coefficients
     
-    #' Title
+    #' buildModRegVariant
+    #' @description Fitting function for the manual dlm with time variant coefficients regression
+    #' @param v -  list of initial values for the parameters [dV, dW, m0]  
     #'
-    #' @param v 
-    #'
-    #' @return
+    #' @return an object class dlm with estimated parameters
     #' @export
     #'
     #' @examples
@@ -288,14 +287,15 @@ shinyServer(
     
   }  
   
-  
+    
   #_________Constructing manual dlm_________________
   
-    #' Title
+    #' buildDlmPoly
+    #' 
+    #' @description Constructing function for the manual dlm with fixed coefficients
+    #' @param v -  list of initial values for the parameters [dV, dW, m0]  
     #'
-    #' @param v 
-    #'
-    #' @return
+    #' @return an object class dlm with estimated parameters
     #' @export
     #'
     #' @examples
@@ -307,14 +307,10 @@ shinyServer(
   }
   
     
-    #' Title
+    #' buildDlmSeas
+    #' @description A reactive function, constructs the seasonal part of a dlm
     #'
-    #' @param v 
     #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
   buildDlmSeas<- reactive({
     if (input$seasType=="Seasonal"){
       dlmModSeas( frequency= input$seasFreq, dV=input$seasVarNoise, dW=input$seasVarSys)
@@ -325,12 +321,13 @@ shinyServer(
   
     
     
-#' Title
+#' fitDlmPoly
+#' @description The function returns the MLE of unknown parameters in the specification of a state space model
 #'
-#' @param p 
-#' @param data 
+#' @param p - vector of inital values for the parameters
+#' @param data time series data to be fitted
 #'
-#' @return
+#' @return The function dlmMLE returns the value returned by optim.
 #' @export
 #'
 #' @examples
@@ -340,45 +337,12 @@ shinyServer(
   }
   
   
-  
-  #____________Calculating startign values for the optim in dlm()
-    #' Title
-    #'
-    #' @param v 
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
-  initGuessParams<- reactive({
-    inFile<- data()
-    data<-inFile[, input$paramsDlm]
-    varGuess<- var(diff(data), na.rm=TRUE)
-    mu0Guess<-data[1]
-    lambdaGuess<-mean(diff(data), na.rm=TRUE)
-    if (input$typeDlm=="Time-varying coefficients"){
-      params<-c(log(varGuess), log(varGuess/5), log(varGuess/5), mu0Guess, lambdaGuess)
-      mle<- dlmMLE(data, parm = params, build = buildModRegVariant,  method = "Nelder-Mead") 
-    } else if (input$typeDlm=="Manual"){
-      params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
-      mle<- dlmMLE(data, parm = params, build = buildDlmPoly,  method = "Nelder-Mead")
-    } else {
-      params<- c(log(varGuess), log(varGuess/5), mu0Guess, lambdaGuess)
-      mle<- dlmMLE(data, parm = params, build = buildModRegConst,  method = "Nelder-Mead")
-    }
-    mle
-  })
-  
-  
   #__________Constructing a dlm model with the paramteres
-    #' Title
+    #' dlm
+    #' 
+    #' @description A reactive function, constructs the dlm model with fitted parameters
     #'
-    #' @param v 
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+    #' @return returns an object of class dlm
   dlm<-reactive({
     dv<-as.numeric(input$dlmParamsDv)
     dw<- input$dlmParamsDw
@@ -387,14 +351,12 @@ shinyServer(
     m0<-as.numeric(unlist(strsplit(m0, ",")))
     c0<-input$dlmParamsC0
     c0<-as.numeric(unlist(strsplit(c0, ",")))
-    init<-initGuessParams()
     inFile<- data()
     data<-inFile[, input$paramsDlm]
     p<- c(dv,dw, c0, m0)
     if (input$typeDlm=="Time-varying coefficients"){
       dlm<- buildModRegVariant(p)
     } else if (input$typeDlm=="Manual"){
-      
       if (input$seasType=="No seasonality"){
         pars<- fitDlmPoly(p, data)
         dlm<- buildDlmPoly(pars$par)
@@ -411,14 +373,11 @@ shinyServer(
   
   
   #__________Smoothign the data usign the dlm model
-    #' Title
-    #'
-    #' @param v 
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+    #' smoothDlm
+    #' @description A reactive function, applies Kalman smoother to the dlm model to compute 
+    #' smoothed values of the state vectors, together with their variance/covariance matrices.
+    #' 
+    #' @return Time series (or matrix) of smoothed values of the state vectors
   smoothDlm<- reactive({
     inFile<- data()
     data<-inFile[, input$paramsDlm]
@@ -429,14 +388,11 @@ shinyServer(
   
   
   #___________Kalman Filtering for the dlm model
-    #' Title
-    #'
-    #' @param v 
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+    #' filterDlm
+    #' @description A reactive function, applies Kalman filter to the dlm model to compute filtered values of the state vectors.
+    #' 
+    #' @return Time series (or matrix) of filtered values of the state vectors
+    #' 
   filterDlm<-reactive({
     inFile<- data()
     data<-inFile[, input$paramsDlm]
@@ -448,14 +404,11 @@ shinyServer(
   
     #__________MARSS handler__________
     
-    #' Title
-    #'
-    #' @param v 
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+    #' MARSSHandler
+    #' @description A reactive function, transform the data frame into matrix required by MARSS package
+    #' 
+    #' @return a transposed matrix with the data
+    #' 
     MARSSHandler<-reactive({
       inFile<- input$data
       req(inFile)
@@ -468,14 +421,11 @@ shinyServer(
     })
     
     
-    #' Title
-    #'
-    #' @param v 
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+    #' marss
+    #' @description A reactive function, uses optim to estimate the parameters for the model for the given data set 
+    #' 
+    #' @return an object class marssMLE
+    #' 
     marss<-reactive({
       dat<-MARSSHandler()
       mars<-MARSS(dat)
@@ -483,14 +433,12 @@ shinyServer(
     })
   
     
-    #' Title
-    #'
-    #' @param v 
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+    #' marssSmooth
+    #' @description A reactive function, applies Kalman smoother to the marss model to compute 
+    #' smoothed values of the state vectors, together with their variance/covariance matrices.
+    #' 
+    #' @return State first moment conditioned on y(1:T): E[x(t) | y(1:T)] (m x T matrix). Kalman smoother output.
+    #' 
   marssSmooth<- reactive({
     model<-marss()
     s<-MARSSkfss(model)$xtT
@@ -498,14 +446,11 @@ shinyServer(
   })
   
     
-    #' Title
-    #'
-    #' @param v 
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+    #' marssKalman
+    #' @description A reactive function, applies Kalman filter to the marss model to compute filtered values of the state vectors.
+    #' 
+    #' @return State first moment conditioned on y(1:t): E[x(t) | y(1:t)] (m x T). Kalman filter output. (S&S eqn 6.17 with s=t)
+    #' 
   marssKalman<- reactive({
     model<-marss()
     k<-MARSSkfss(model)$xtt
@@ -513,14 +458,11 @@ shinyServer(
     })
   
     
-    #' Title
+    #' marssForecast
+    #' @description A reactive forecasting function for the marss models.
     #'
-    #' @param v 
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+    #' @return data - data frame with the forecasting ( simulated) values. 
+    #' 
   marssForecast<- reactive({
     f<-stateForecast()
     forec<-data.frame(f$sim.data)
@@ -533,14 +475,11 @@ shinyServer(
 
   
     observeEvent(input$analyseState,{
-      #' Title
-      #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
+      #' modelState
+      #' @description A reactive function, switches between different Space-State models according to the user input.
+      #' 
+      #' @return a fitted model
+      #' 
       modelState<- reactive({
         model<- switch(input$StateModel,
                        "dlm"={
@@ -556,54 +495,25 @@ shinyServer(
       })
       
       
-      #' Title
-      #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
-      output$stateModel<- renderPrint({
-        model<- modelState()
-        capture.output(model)
-      })
-      
-      
-      #' Title
-      #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
+      #' logTextState
+      #' @description A reactive function, constructs the console output for the Space State models
+      #' 
       logTextState <- reactive({
         capture.output(modelState())
       })
       
       
-      #' Title
-      #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
+      #' output$consoleState
+      #' @description A reactive output function, outputs the console data for the Space-State models
+      #' 
       output$consoleState<- renderPrint({
         logTextState()
       })
       
       
-      #' Title
-      #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
+      #' output$stateDiag
+      #' @description A rendering reactive function, constructs the diagnostics plot for Space State models
+      #' 
       output$stateDiag<-renderPlot({
         
         if ( input$StateModel=='Structural'){
@@ -616,37 +526,12 @@ shinyServer(
       })
       
       
-      #' Title
+      #' stateForecast
+      #' @description A reactive function, constructs forecast for different 
+      #' Space State models according the user input
       #'
-      #' @param v 
       #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
-      dlmPredict<- reactive({
-        data<- filterDlm()
-        if (input$typeDlm=='Manual'){
-          fore<- dlmForecast(data, nAhead = input$statePeriod, sampleNew=100)
-          ciTheory20 <- (outer(sapply(fore$Q, FUN=function(x) sqrt(diag(x))), qnorm(c(0.2,0.8))) +
-                         as.vector(t(fore$f)))
-          ciTheory5 <- (outer(sapply(fore$Q, FUN=function(x) sqrt(diag(x))), qnorm(c(0.05,0.95))) +
-                           as.vector(t(fore$f)))
-          Forecast<-cbind(fore$f[,1], ciTheory20, ciTheory5)
-          Forecast
-        } else {
-        }
-      })
-      
-      
-      #' Title
-      #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
+      #' @return a data frame with forecasted values  and CI
       stateForecast<- reactive({
         if ( input$StateModel=="Structural"){
           data<-state()
@@ -669,14 +554,12 @@ shinyServer(
       })
       
       
-      #' Title
+      #' MARSSforecastTable
+      #' @description A reactive function, constructs forecasting table for the MARSS momdels
       #'
-      #' @param v 
+      #' 
+      #' @return a data.frame to be outputed in the ui for the MARSS model
       #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
       MARSSforecastTable<- reactive({
         f<-stateForecast()
         a<-t(f$E.y)
@@ -686,14 +569,9 @@ shinyServer(
       })
       
       
-      #' Title
+      #' output$stateForecast
+      #' @description a reactive rendering function, outputs the forecast table for the SPace State models
       #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
       output$stateForecast<- DT::renderDataTable({
         
         if (input$StateModel=="Structural"){
@@ -710,14 +588,10 @@ shinyServer(
       })
       
       
-      #' Title
+      #' dlmPlot
+      #' @description A reactive function, constructs the data plot with smoothed and filtered lines for dlm models
       #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
+      #' @return a dlm plot
       dlmPlot<- reactive({
         data1<- data()
         data<-data1[, input$paramsDlm]
@@ -744,14 +618,9 @@ shinyServer(
       })
       
       
-      #' Title
+      #' structuralPlot
+      #' @description A reactive function, constructs the data plot with smoothed and filtered lines for Structural models
       #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
       structuralPlot<- reactive({
         data<-state()
         data1<- data()
@@ -764,14 +633,12 @@ shinyServer(
       })
       
       
-      #' Title
+      #' output$MARSSplotData
+      #' @description A reactive rendering function, constructs data plots with filtered and smoothed lines for 
+      #' MARSS models, a plot per parameters chosen
       #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
+      #' @return A list of plots for MARSS
+      #' 
       output$MARSSplotData <- renderUI({
         plot_output_list <- lapply(1:length(input$paramsMARSS), function(i) {
           plotname <- paste("plot", i, sep="")
@@ -784,6 +651,7 @@ shinyServer(
       
       observe({ 
         for (m in 1:length(input$paramsMARSS)) {
+          #Needed local for proper work of the ui
           local({ 
             i<-m
             plotname <- paste("plot", i, sep="")
@@ -800,14 +668,10 @@ shinyServer(
       })
       
       
-      #' Title
+      #' output$stateFittedPlot
+      #' @description A reactive rendering function, switches between data and fit plot for Space state models
+      #' according to the user input, ignores MARSS construction
       #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
       output$stateFittedPlot<- renderPlot({
         if (input$StateModel=="dlm"){
           dlmPlot()
@@ -816,17 +680,12 @@ shinyServer(
          }})
       
       
-      #Function creating a data.frame in the form required by ggplot in dlmForecastPlot()
-      
-      
-      #' Title
+     
+      #' stateForecastPlotDataHandler
+      #' @description A reactive function, creating a data.frame in the form required by ggplot in dlmForecastPlot()
       #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
+      #' @return a data.frame in the required format
+      #' 
       stateForecastPlotDataHandler<- reactive({
         data1<- data()
         data<-data.frame(data1[, input$paramsDlm])
@@ -842,18 +701,10 @@ shinyServer(
         f
       })
       
-      
-      #ggplot functionality like in arime.plot()
-      
-      
-      #' Title
+
+      #' dlmForecastPlot
+      #' @description A reactive function, reconstructs ggplot functionality like in arime.plot() for Space State
       #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
       dlmForecastPlot<- reactive({
         f<- stateForecastPlotDataHandler()
         g<- ggplot(f, aes(x=x, y=data)) + geom_line() + geom_line(aes(x=x, y=mean), colour = "blue")
@@ -863,14 +714,9 @@ shinyServer(
       })
       
       
-      #' Title
+      #' marssForecastPlot
+      #' @description A reactive function, constructs the forecast plot for MARSS models
       #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
       marssForecastPlot<-reactive({
         data<- MARSSHandler()[1,]
         f<-stateForecast()
@@ -882,14 +728,11 @@ shinyServer(
       })
       
       
-      #' Title
+      #' output$MARSSForecastPlot
+      #' @description A reactive rendering function, constructs forecasting plots for each of the parameters for MARSS model
       #'
-      #' @param v 
+      #' @return List of forecast plots
       #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
       output$MARSSForecastPlot<- renderUI({
         plot_output_list1 <- lapply(1:length(input$paramsMARSS), function(i) {
           plotname1 <- paste("plot1", i, sep="")
@@ -920,15 +763,14 @@ shinyServer(
       })
       
       
-#' Title
+#' MARSSForecastPlotDataHandler
+#' @description A plot data handler for MARSS models
 #'
-#' @param d 
-#' @param forecast 
+#' @param d - original data 
+#' @param forecast - the forecasted data
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return a data frame in the format neede for ggplot
+#' 
       MARSSForecastPlotDataHandler<- function(d, forecast){
         data<-data.frame(d)
         data$x<- c(1:length(d))
@@ -942,14 +784,11 @@ shinyServer(
       }
       
       
-      #' Title
+      #' output$stateForecastPlot
+      #' @description A reactive rendering function, switches the Space State Forecast plot according to the chosen model type
       #'
-      #' @param v 
-      #'
-      #' @return
-      #' @export
-      #'
-      #' @examples
+      #' @return A Space State forecast plot in the UI
+      #' 
       output$stateForecastPlot<-renderPlot({
         if (input$StateModel=="dlm"){
           dlmForecastPlot()
