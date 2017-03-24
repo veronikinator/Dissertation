@@ -1,3 +1,4 @@
+#CSS code for the console box ui
 css<- "div.box {
       width: 250px;
       border: 2px solid rgb(191, 0, 55);
@@ -59,7 +60,7 @@ shinyUI(
                plotOutput("arimaForecastPlot")
                )
       ),
-    tabPanel("Space-State",
+    tabPanel("State-Space",
                sidebarPanel(
                  selectInput("StateModel", "Choose model:", choices=c("Structural", "dlm", "Autoregressive")),
                  numericInput("statePeriod", "Choose a number of periods to forecast:", 10),

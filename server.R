@@ -499,7 +499,11 @@ shinyServer(
       #' @description A reactive function, constructs the console output for the Space State models
       #' 
       logTextState <- reactive({
-        capture.output(modelState())
+        a<-capture.output(modelState())
+        if (input$StateModel=="Structural"){
+          a<-paste(toString(a),"LogLik", capture.output(modelState()$loglik), sep=" ")
+        }
+        a
       })
       
       
