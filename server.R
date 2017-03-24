@@ -503,6 +503,11 @@ shinyServer(
         if (input$StateModel=="Structural"){
           a<-paste(toString(a),"LogLik", capture.output(modelState()$loglik), sep=" ")
         }
+        if (input$StateModel=="dlm"){
+          inFile<- data()
+          data<-inFile[, input$paramsDlm]
+          a <- paste(toString(a),"LogLik", capture.output(dlmLL(data, dlm())))
+        }
         a
       })
       
