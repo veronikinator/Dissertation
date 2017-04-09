@@ -45,8 +45,13 @@ shinyServer(
       updateCheckboxGroupInput(session, inputId="xregParamsArimax", choices = vars, selected=NULL)
       updateCheckboxGroupInput(session, inputId="xregParamsAutoArimax", choices = vars, selected=NULL)
       updateCheckboxGroupInput(session, inputId="paramsMARSS", choices = vars, selected=vars[1])
-      updateCheckboxGroupInput(session, inputId="paramsData", choices = vars, selected=vars)
+      updateCheckboxGroupInput(session, inputId="paramsData", label="Choose columns", choices = vars, selected=vars)
       table
+    })
+    
+    
+    output$DataParams<-renderUI({
+      checkboxGroupInput("paramsData", label="", choices = NULL)
     })
     
     #######################Outputting the uploaded table##########################

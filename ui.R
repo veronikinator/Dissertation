@@ -29,7 +29,8 @@ shinyUI(
                                                               '.csv',
                                                               '.tsv')
                     ),
-          checkboxGroupInput("paramsData", "Choose columns", choices = NULL)
+          uiOutput("DataParams")
+          #checkboxGroupInput("paramsData", "Choose columns", choices = NULL)
         ),
       mainPanel(
         DT::dataTableOutput('contents'),
