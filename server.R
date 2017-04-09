@@ -41,8 +41,9 @@ shinyServer(
       updateSelectInput(session, "paramsState","Select Columns:", choices = vars)
       updateSelectInput(session, "paramsDlm","Select Columns:", choices = vars)
       updateSelectInput(session, "explainDlm","Choose explanatory variable:", choices = vars)
-      updateSelectInput(session, "paramsArima", "Select data:", choices = vars)
+      updateSelectInput(session, inputId="paramsArima", "Select data:", choices = vars)
       updateCheckboxGroupInput(session, inputId="xregParamsArimax", choices = vars, selected=NULL)
+      updateCheckboxGroupInput(session, inputId="xregParamsAutoArimax", choices = vars, selected=NULL)
       updateCheckboxGroupInput(session, inputId="paramsMARSS", choices = vars, selected=vars[1])
       updateCheckboxGroupInput(session, inputId="paramsData", choices = vars, selected=vars)
       table

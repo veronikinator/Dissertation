@@ -43,7 +43,7 @@ shinyUI(
                               ),
                  conditionalPanel("input.arimaModel=='Auto Arima'",
                                   selectInput('paramsAutoArima', 'Parameters:', choices = NULL),
-                                  checkboxGroupInput("xregParamsArimax", "Choose explanatory variables:", choices = NULL)),
+                                  checkboxGroupInput("xregParamsAutoArimax", "Choose explanatory variables:", choices = NULL)),
                  conditionalPanel("input.arimaModel=='Manual'",
                                   textInput("arimaOrder", "Choose the order of the model:", "0,0,0"),
                                   selectInput('paramsArima', 'Parameters:', choices = NULL),
